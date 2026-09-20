@@ -1,0 +1,17 @@
+digraph lifecycle {
+  rankdir=LR; bgcolor="white";
+  node [fontname="DejaVu Sans", fontsize=11, shape=box, style="rounded,filled", color="#7a8899", fillcolor="#eef2f6"];
+  edge [fontname="DejaVu Sans", fontsize=9, color="#5a6878"];
+  queued -> extracting [label="  worker picks up"];
+  extracting -> ready [label="  all checks pass"];
+  extracting -> needs_review [label="  a check fails"];
+  extracting -> failed [label="  API error · bad JSON"];
+  needs_review -> ready [label="  corrected"];
+  failed -> queued [label="  “reintentar”"];
+  ready -> committed [label="  human commits"];
+  extracting -> queued [label="  server restart\n  re-queues", style=dashed, color="#b06a6a", fontcolor="#b06a6a"];
+  ready [fillcolor="#dcecdf", color="#5f8f6c"];
+  committed [fillcolor="#dcecdf", color="#5f8f6c", shape=doubleoctagon];
+  needs_review [fillcolor="#fff8e1", color="#c9a227"];
+  failed [fillcolor="#fbe3e3", color="#b06a6a"];
+}

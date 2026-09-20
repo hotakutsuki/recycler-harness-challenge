@@ -1,0 +1,20 @@
+digraph data {
+  rankdir=TB; bgcolor="white"; nodesep=0.4; ranksep=0.5;
+  node [fontname="DejaVu Sans", fontsize=10, shape=record, style=filled, fillcolor="#eef2f6", color="#7a8899"];
+  edge [fontname="DejaVu Sans", fontsize=9, color="#5a6878"];
+
+  Sheet [label="{Sheet|photo_path\nstatus\nraw_extraction (JSON, immutable)\ncreated_at}"];
+  Event [label="{WeighingEvent|date\nsupplier\nplate\ntruck gross / tare / net}"];
+  Line  [label="{Line|material_raw\nmaterial_id\ngross_raw · gross_kg\ndeduction · reason\nnet_kg · unit_original\nprice · amount\nflags[]}"];
+  Mat   [label="{Material|name\nparent (subcategory)\ntrade_unit\ndefault_price}"];
+  Alias [label="{Alias|text\nmaterial_id}"];
+  Corr  [label="{Correction|field\nfrom → to\nuser · timestamp}", fillcolor="#fff8e1", color="#c9a227"];
+  Cfg   [label="{Config|tolerance_pct = 10\ncurrency = USD}"];
+
+  Sheet -> Event [label=" 1:1"];
+  Event -> Line [label=" 1:N"];
+  Line -> Mat [label=" N:1 (resolved)"];
+  Mat -> Alias [label=" 1:N"];
+  Sheet -> Corr [label=" 1:N  audit trail"];
+  Mat -> Mat [label=" parent"];
+}

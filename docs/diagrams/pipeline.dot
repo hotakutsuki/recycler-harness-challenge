@@ -1,0 +1,30 @@
+digraph pipeline {
+  rankdir=TB; bgcolor="white";
+  node [fontname="DejaVu Sans", fontsize=11, shape=box, style="rounded,filled", color="#7a8899"];
+  edge [fontname="DejaVu Sans", fontsize=9, color="#5a6878"];
+
+  photo   [label="Photo of a handwritten\nweighing detail sheet", shape=note, fillcolor="#eef2f6"];
+  pre     [label="Preprocess\nresize · orientation", fillcolor="#eef2f6"];
+  ex      [label="EXTRACT  —  model\ntranscribes only: raw + value + legible", fillcolor="#e8e2f3", color="#8878b0"];
+  norm    [label="NORMALIZE  —  code\nkg · lb · qq · t → kg ; aliases → catalog", fillcolor="#fdf0c9", color="#c9a227"];
+  val     [label="VALIDATE  —  code\nV1–V9 arithmetic & plausibility", fillcolor="#fdf0c9", color="#c9a227"];
+  ok      [label="ready", shape=oval, fillcolor="#dcecdf", color="#5f8f6c"];
+  reread  [label="Independent re-read of failing fields\n(the model is NOT told which answer would pass)", fillcolor="#e8e2f3", color="#8878b0"];
+  agree   [label="Both readings agree?", shape=diamond, fillcolor="#ffffff", color="#7a8899"];
+  human   [label="needs review  —  human\nphoto side by side, issues in plain Spanish", shape=oval, fillcolor="#fbe3e3", color="#b06a6a"];
+  commit  [label="Human commits the sheet", fillcolor="#dcecdf", color="#5f8f6c"];
+  db      [label="Ledger (committed only)", shape=cylinder, fillcolor="#dcecdf", color="#5f8f6c"];
+  rep     [label="Inventory & cash reports", shape=note, fillcolor="#dcecdf", color="#5f8f6c"];
+
+  photo -> pre -> ex -> norm -> val;
+  val -> ok [label="  all checks pass"];
+  val -> reread [label="  a check fails", color="#b06a6a"];
+  reread -> agree;
+  agree -> human [label="  agree → the sheet itself\n  probably has an error", color="#b06a6a"];
+  agree -> human [label="  disagree → show\n  both readings", color="#b06a6a"];
+  ok -> commit; human -> commit;
+  commit -> db -> rep;
+
+  note [label="Never auto-corrected to make totals match.\nA retry that says “the sums don't match” invites\nthe model to invent a number that passes.", shape=box, style="filled", fillcolor="#fff8e1", color="#c9a227", fontsize=10];
+  { rank=same; reread; note; }
+}

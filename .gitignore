@@ -1,0 +1,11 @@
+node_modules/
+.next/
+.env
+.env.local
+
+# Runtime data: photos and the SQLite database
+data/
+
+# The evaluation dataset (photos + ground truth) lives outside this repo.
+# Point EVAL_DATASET_DIR at it. See evals/README.md.
+evals/dataset/

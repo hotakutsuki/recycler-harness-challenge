@@ -1,0 +1,62 @@
+digraph arch {
+  rankdir=TB;
+  bgcolor="white";
+  node [fontname="DejaVu Sans", fontsize=11, shape=box, style="rounded,filled", color="#7a8899", penwidth=1.1];
+  edge [fontname="DejaVu Sans", fontsize=9, color="#5a6878"];
+  compound=true;
+
+  subgraph cluster_browser {
+    label="  Browser — Spanish UI  ";
+    fontname="DejaVu Sans Bold"; fontsize=11; color="#b9c2cc"; style="rounded"; bgcolor="#f4f7fa";
+    capture [label="Capture (phone)\ncamera input + client-side resize", fillcolor="#e3edf7"];
+    review  [label="Review (desktop)\nphoto ⟷ extracted table", fillcolor="#e3edf7"];
+    reports [label="Reports\ninventory · monthly cash", fillcolor="#e3edf7"];
+    config  [label="Configuration\nmaterials · aliases · units", fillcolor="#e3edf7"];
+  }
+
+  subgraph cluster_server {
+    label="  Next.js server (Node runtime, long-running)  ";
+    fontname="DejaVu Sans Bold"; fontsize=11; color="#b9c2cc"; style="rounded"; bgcolor="#f7f5f1";
+
+    api [label="Route handlers\nPOST /api/sheets  ·  GET /api/sheets/:id\nPOST /api/sheets/:id/commit", fillcolor="#fbeedd", shape=box];
+    worker [label="In-process worker\n(concurrency-limited)  ⚠ stub, not a real queue", fillcolor="#fbeedd"];
+
+    subgraph cluster_harness {
+      label="  harness/ — framework-free TypeScript  ";
+      fontname="DejaVu Sans Bold"; fontsize=10; color="#c9a227"; style="rounded"; bgcolor="#fdf7e3";
+      schema    [label="schema.ts\nZod — single source of truth", fillcolor="#fdf0c9"];
+      extract   [label="extract.ts\nvision call", fillcolor="#fdf0c9"];
+      normalize [label="normalize.ts\nunits · aliases (pure)", fillcolor="#fdf0c9"];
+      validate  [label="validate.ts\nV1–V9 checks (pure)", fillcolor="#fdf0c9"];
+      pipeline  [label="pipeline.ts\norchestration · re-read", fillcolor="#fdf0c9"];
+    }
+  }
+
+  subgraph cluster_data {
+    label="  Where the data lives  ";
+    fontname="DejaVu Sans Bold"; fontsize=11; color="#b9c2cc"; style="rounded"; bgcolor="#f2f7f3";
+    db    [label="SQLite  ./data/app.db\nsheets · lines · materials · corrections", shape=cylinder, style=filled, fillcolor="#dcecdf"];
+    files [label="Photos  ./data/uploads\nbehind storage.save() / storage.url()", shape=folder, style=filled, fillcolor="#dcecdf"];
+  }
+
+  claude [label="Claude API\nvision + structured outputs", fillcolor="#e8e2f3", shape=box, style="rounded,filled", color="#8878b0"];
+  evals  [label="evals/run.ts\nsame pipeline, 30 sheets, metrics", fillcolor="#f7e6e6", color="#b06a6a"];
+
+  capture -> api [label="  upload (multipart)"];
+  review  -> api [label="  poll · correct · commit"];
+  reports -> db  [label="  read committed only", style=dashed];
+  config  -> db  [style=dashed];
+
+  api -> worker [label="  enqueue"];
+  worker -> pipeline;
+  pipeline -> extract;
+  pipeline -> normalize;
+  pipeline -> validate;
+  extract -> schema [style=dotted, label=" shape"];
+  extract -> claude [label="  image + prompt", color="#8878b0"];
+  claude -> extract [label="  JSON", color="#8878b0", style=dashed];
+  api -> files [label="  store photo"];
+  api -> db;
+  worker -> db [label="  status"];
+  evals -> pipeline [label="  imports directly", color="#b06a6a", style=dashed];
+}
