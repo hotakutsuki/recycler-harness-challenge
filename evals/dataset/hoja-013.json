@@ -1,0 +1,123 @@
+{
+  "folio": "013",
+  "photo": "fotos/hoja-013.jpg",
+  "scenario": "Duplicado exacto de la hoja 001: misma fecha, proveedor, placa y pesos.",
+  "expected_flags": [
+    {
+      "code": "V8"
+    }
+  ],
+  "extraction": {
+    "header": {
+      "date_raw": "2/03/26",
+      "date_iso": "2026-03-02",
+      "supplier": "Juan P.",
+      "plate": "PXA-4512",
+      "weigher": "Luis",
+      "folio": "013",
+      "truck": {
+        "gross": {
+          "raw": "3850",
+          "value": 3850,
+          "legible": true
+        },
+        "tare": {
+          "raw": "3100",
+          "value": 3100,
+          "legible": true
+        },
+        "net": {
+          "raw": "750",
+          "value": 750,
+          "legible": true
+        },
+        "unit": "kg"
+      }
+    },
+    "lines": [
+      {
+        "index": 1,
+        "material_raw": "cart.",
+        "gross": {
+          "raw": "300",
+          "value": 300,
+          "legible": true
+        },
+        "unit": "kg",
+        "deduction": null,
+        "deduction_reason": null,
+        "net": {
+          "raw": "300",
+          "value": 300,
+          "legible": true
+        },
+        "price": null,
+        "amount": null
+      },
+      {
+        "index": 2,
+        "material_raw": "pap.",
+        "gross": {
+          "raw": "200",
+          "value": 200,
+          "legible": true
+        },
+        "unit": "kg",
+        "deduction": null,
+        "deduction_reason": null,
+        "net": {
+          "raw": "200",
+          "value": 200,
+          "legible": true
+        },
+        "price": null,
+        "amount": null
+      },
+      {
+        "index": 3,
+        "material_raw": "chat liv",
+        "gross": {
+          "raw": "180",
+          "value": 180,
+          "legible": true
+        },
+        "unit": "kg",
+        "deduction": null,
+        "deduction_reason": null,
+        "net": {
+          "raw": "180",
+          "value": 180,
+          "legible": true
+        },
+        "price": null,
+        "amount": null
+      },
+      {
+        "index": 4,
+        "material_raw": "plast.",
+        "gross": {
+          "raw": "70",
+          "value": 70,
+          "legible": true
+        },
+        "unit": "kg",
+        "deduction": null,
+        "deduction_reason": null,
+        "net": {
+          "raw": "70",
+          "value": 70,
+          "legible": true
+        },
+        "price": null,
+        "amount": null
+      }
+    ],
+    "total_net": {
+      "raw": "750",
+      "value": 750,
+      "legible": true
+    },
+    "total_amount": null,
+    "notes": []
+  }
+}

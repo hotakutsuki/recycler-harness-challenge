@@ -98,7 +98,7 @@ photo ──► preprocess ──► extract (vision LLM, structured output)
   - **Header:** the weighing date (written on every sheet by the weigher — it is what all reporting is keyed on), supplier, plate, and truck gross/tare/net when present.
   - **Lines:** material, gross weight, unit, deduction and its reason, net, and price if present.
 - Every numeric field carries two values: `raw` (exactly what is written) and `value` (the parsed number). It also carries a per-field `legible` flag. The prompt instructs the model to mark unreadable fields instead of inferring them.
-- **[ASSUMPTION]** Sheet layout: a header (date, supplier, plate, truck weights) plus a table of material lines with deduction and reason columns, and optional price. The evaluation sheets are written against this layout; it will be revised if the partner yard's sheets differ.
+- **No fixed layout.** Yards do not use a printed form: the weigher writes free-form on blank paper — a line for the date, supplier and plate, the truck weights, then one line per material with whatever spacing and abbreviations come naturally, sometimes with a price, sometimes not. So extraction cannot lean on column positions, which rules out template-based OCR and is a large part of why a vision model earns its place here. The evaluation sheets are written that way on purpose.
 
 ### 4.2 Normalization (code, not the model)
 - **Units:** kg, lb, quintal (1 qq = 100 lb = 45.359 kg), and t, all converted to kg internally. The original unit is kept.
@@ -215,7 +215,7 @@ The challenge submission does not need to be deployed — a recorded demo is exp
 - 16 sheets handwritten by us in the style of the yard, then photographed under realistic conditions (angles, shadows, yellow light, creased paper).
 - **Eight clean, eight with a seeded problem** — a wrong amount, a detail total outside tolerance, a price that diverges from the catalog, an unknown material, an illegible field, a truck subtraction that does not add up, a deduction that does not add up, and a duplicate. The half-and-half split is deliberate: with only broken sheets you measure detection and never see the false alarms on good sheets, which is what would make the system unbearable for the person reviewing.
 - Each sheet has a hand-written ground-truth JSON.
-- **Not in this repository.** The photos and ground truth live outside it, and `evals/run.ts` reads them from `EVAL_DATASET_DIR`. The eval runner and the metrics report are committed, so the method and the numbers are inspectable — but a reviewer cannot re-run them. That is a deliberate trade, and the cost is stated rather than hidden.
+- **Committed to the repo** — photos and ground truth both, so the evaluation reproduces. They are synthetic sheets we wrote ourselves; no real yard's data is involved.
 - Real sheets from the partner yard will be added when available and reported separately.
 
 **Metrics.**

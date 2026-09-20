@@ -1,0 +1,110 @@
+{
+  "folio": "012",
+  "photo": "fotos/hoja-012.jpg",
+  "scenario": "El descuento no cuadra con el neto: 300 − 25 son 275, no 285.",
+  "expected_flags": [
+    {
+      "code": "V1",
+      "linea": 1
+    }
+  ],
+  "extraction": {
+    "header": {
+      "date_raw": "9/03/26",
+      "date_iso": "2026-03-09",
+      "supplier": "Taller Vélez",
+      "plate": "JKL-2234",
+      "weigher": "Marcos",
+      "folio": "012",
+      "truck": {
+        "gross": {
+          "raw": "4075",
+          "value": 4075,
+          "legible": true
+        },
+        "tare": {
+          "raw": "3500",
+          "value": 3500,
+          "legible": true
+        },
+        "net": {
+          "raw": "575",
+          "value": 575,
+          "legible": true
+        },
+        "unit": "lb"
+      }
+    },
+    "lines": [
+      {
+        "index": 1,
+        "material_raw": "chat auto",
+        "gross": {
+          "raw": "300",
+          "value": 300,
+          "legible": true
+        },
+        "unit": "lb",
+        "deduction": {
+          "raw": "25",
+          "value": 25,
+          "legible": true
+        },
+        "deduction_reason": "radiador c/ plastico",
+        "net": {
+          "raw": "285",
+          "value": 285,
+          "legible": true
+        },
+        "price": {
+          "raw": "0,10",
+          "value": 0.1,
+          "legible": true
+        },
+        "amount": {
+          "raw": "28,50",
+          "value": 28.5,
+          "legible": true
+        }
+      },
+      {
+        "index": 2,
+        "material_raw": "fierro",
+        "gross": {
+          "raw": "300",
+          "value": 300,
+          "legible": true
+        },
+        "unit": "lb",
+        "deduction": null,
+        "deduction_reason": null,
+        "net": {
+          "raw": "300",
+          "value": 300,
+          "legible": true
+        },
+        "price": {
+          "raw": "0,13",
+          "value": 0.13,
+          "legible": true
+        },
+        "amount": {
+          "raw": "39,00",
+          "value": 39,
+          "legible": true
+        }
+      }
+    ],
+    "total_net": {
+      "raw": "585",
+      "value": 585,
+      "legible": true
+    },
+    "total_amount": {
+      "raw": "67,50",
+      "value": 67.5,
+      "legible": true
+    },
+    "notes": []
+  }
+}

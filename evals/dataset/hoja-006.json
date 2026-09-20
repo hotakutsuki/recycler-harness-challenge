@@ -1,0 +1,104 @@
+{
+  "folio": "006",
+  "photo": "fotos/hoja-006.jpg",
+  "scenario": "Falta 18 %: fuera de tolerancia.",
+  "expected_flags": [
+    {
+      "code": "V3"
+    }
+  ],
+  "extraction": {
+    "header": {
+      "date_raw": "4/03/26",
+      "date_iso": "2026-03-04",
+      "supplier": "Coop. Reciclar",
+      "plate": "AAB-1102",
+      "weigher": "Luis",
+      "folio": "006",
+      "truck": {
+        "gross": {
+          "raw": "4500",
+          "value": 4500,
+          "legible": true
+        },
+        "tare": {
+          "raw": "3500",
+          "value": 3500,
+          "legible": true
+        },
+        "net": {
+          "raw": "1000",
+          "value": 1000,
+          "legible": true
+        },
+        "unit": "kg"
+      }
+    },
+    "lines": [
+      {
+        "index": 1,
+        "material_raw": "pap.",
+        "gross": {
+          "raw": "400",
+          "value": 400,
+          "legible": true
+        },
+        "unit": "kg",
+        "deduction": null,
+        "deduction_reason": null,
+        "net": {
+          "raw": "400",
+          "value": 400,
+          "legible": true
+        },
+        "price": null,
+        "amount": null
+      },
+      {
+        "index": 2,
+        "material_raw": "cart.",
+        "gross": {
+          "raw": "300",
+          "value": 300,
+          "legible": true
+        },
+        "unit": "kg",
+        "deduction": null,
+        "deduction_reason": null,
+        "net": {
+          "raw": "300",
+          "value": 300,
+          "legible": true
+        },
+        "price": null,
+        "amount": null
+      },
+      {
+        "index": 3,
+        "material_raw": "plast.",
+        "gross": {
+          "raw": "120",
+          "value": 120,
+          "legible": true
+        },
+        "unit": "kg",
+        "deduction": null,
+        "deduction_reason": null,
+        "net": {
+          "raw": "120",
+          "value": 120,
+          "legible": true
+        },
+        "price": null,
+        "amount": null
+      }
+    ],
+    "total_net": {
+      "raw": "820",
+      "value": 820,
+      "legible": true
+    },
+    "total_amount": null,
+    "notes": []
+  }
+}

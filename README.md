@@ -43,22 +43,29 @@ No Docker needed. A `docker compose up` path exists for a production-like check,
 | `npm run dev` | the app |
 | `npm test` | unit tests for the pure parts (no API calls, no key needed) |
 | `npm run typecheck` | |
-| `npm run eval` | the evaluation suite — needs the dataset, see below |
+| `npm run eval` | the evaluation suite against the 16 sheets in `evals/dataset` |
 
 Photos and the SQLite database are written to `./data`, which is not in version control.
 
-## The evaluation dataset is not in this repository
+## Evaluation
 
-Quality is measured against 16 sheets written and photographed by hand: eight clean and
-eight with a seeded problem (a wrong amount, a total outside tolerance, an unknown
-material, an illegible field, a duplicate, and so on). The headline metric is the
-**silent error rate** — fields committed with a wrong value and *no* flag, which is the
-kind of error that actually costs a yard money.
+Quality is measured against 16 sheets written and photographed by hand, and they are in
+this repo — photos and ground truth both — so `npm run eval` reproduces the numbers.
 
-The runner (`evals/run.ts`) and the results (`evals/REPORT.md`) are committed. The photos
-and their ground truth are not: they live outside the repo, and the runner reads them
-from `EVAL_DATASET_DIR`. So the method and the numbers are inspectable, but a reviewer
-cannot re-run them. That is a deliberate trade, and it is stated here rather than hidden.
+Eight are clean and eight carry a seeded problem: a wrong amount, a detail total outside
+tolerance, a price that diverges from the catalog, an unknown material, an illegible
+field, a truck subtraction that does not add up, a deduction that does not add up, and a
+duplicate. The half-and-half split is deliberate — with only broken sheets you measure
+detection and never see the false alarms on good sheets, which is what would make the
+system unbearable for the person doing the reviewing.
+
+The headline metric is the **silent error rate**: fields committed with a wrong value and
+*no* flag. That is the error that actually costs a yard money, and it is what every
+change to the prompt, the model or the checks is judged against.
+
+These are synthetic sheets written by us, modelled on how an Ecuadorian yard actually
+writes: free-form on blank paper, no printed form, mixed units, local abbreviations.
+No real yard's data is in this repository.
 
 ## How it works, briefly
 

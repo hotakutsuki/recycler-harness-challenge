@@ -1,0 +1,106 @@
+{
+  "folio": "007",
+  "photo": "fotos/hoja-007.jpg",
+  "scenario": "La aritmética cuadra, pero el cobre se pagó a 2,80 cuando el catálogo dice 3,20.",
+  "expected_flags": [
+    {
+      "code": "PRECIO",
+      "linea": 1
+    }
+  ],
+  "extraction": {
+    "header": {
+      "date_raw": "5/03/26",
+      "date_iso": "2026-03-05",
+      "supplier": "Don Ramiro",
+      "plate": "ABC-1234",
+      "weigher": "Marcos",
+      "folio": "007",
+      "truck": {
+        "gross": {
+          "raw": "3815",
+          "value": 3815,
+          "legible": true
+        },
+        "tare": {
+          "raw": "3500",
+          "value": 3500,
+          "legible": true
+        },
+        "net": {
+          "raw": "315",
+          "value": 315,
+          "legible": true
+        },
+        "unit": "lb"
+      }
+    },
+    "lines": [
+      {
+        "index": 1,
+        "material_raw": "cobre 1ra",
+        "gross": {
+          "raw": "15",
+          "value": 15,
+          "legible": true
+        },
+        "unit": "lb",
+        "deduction": null,
+        "deduction_reason": null,
+        "net": {
+          "raw": "15",
+          "value": 15,
+          "legible": true
+        },
+        "price": {
+          "raw": "2,80",
+          "value": 2.8,
+          "legible": true
+        },
+        "amount": {
+          "raw": "42,00",
+          "value": 42,
+          "legible": true
+        }
+      },
+      {
+        "index": 2,
+        "material_raw": "chat pes",
+        "gross": {
+          "raw": "300",
+          "value": 300,
+          "legible": true
+        },
+        "unit": "lb",
+        "deduction": null,
+        "deduction_reason": null,
+        "net": {
+          "raw": "300",
+          "value": 300,
+          "legible": true
+        },
+        "price": {
+          "raw": "0,15",
+          "value": 0.15,
+          "legible": true
+        },
+        "amount": {
+          "raw": "45,00",
+          "value": 45,
+          "legible": true
+        }
+      }
+    ],
+    "total_net": {
+      "raw": "315",
+      "value": 315,
+      "legible": true
+    },
+    "total_amount": {
+      "raw": "87,00",
+      "value": 87,
+      "legible": true
+    },
+    "notes": []
+  }
+}

@@ -1,0 +1,128 @@
+{
+  "folio": "003",
+  "photo": "fotos/hoja-003.jpg",
+  "scenario": "Con precios, todo cuadra.",
+  "expected_flags": [],
+  "extraction": {
+    "header": {
+      "date_raw": "3/03/26",
+      "date_iso": "2026-03-03",
+      "supplier": "Don Ramiro",
+      "plate": "ABC-1234",
+      "weigher": "Marcos",
+      "folio": "003",
+      "truck": {
+        "gross": {
+          "raw": "4100",
+          "value": 4100,
+          "legible": true
+        },
+        "tare": {
+          "raw": "3500",
+          "value": 3500,
+          "legible": true
+        },
+        "net": {
+          "raw": "600",
+          "value": 600,
+          "legible": true
+        },
+        "unit": "lb"
+      }
+    },
+    "lines": [
+      {
+        "index": 1,
+        "material_raw": "cobre 1ra",
+        "gross": {
+          "raw": "20",
+          "value": 20,
+          "legible": true
+        },
+        "unit": "lb",
+        "deduction": null,
+        "deduction_reason": null,
+        "net": {
+          "raw": "20",
+          "value": 20,
+          "legible": true
+        },
+        "price": {
+          "raw": "3,20",
+          "value": 3.2,
+          "legible": true
+        },
+        "amount": {
+          "raw": "64,00",
+          "value": 64,
+          "legible": true
+        }
+      },
+      {
+        "index": 2,
+        "material_raw": "chat pes",
+        "gross": {
+          "raw": "400",
+          "value": 400,
+          "legible": true
+        },
+        "unit": "lb",
+        "deduction": null,
+        "deduction_reason": null,
+        "net": {
+          "raw": "400",
+          "value": 400,
+          "legible": true
+        },
+        "price": {
+          "raw": "0,15",
+          "value": 0.15,
+          "legible": true
+        },
+        "amount": {
+          "raw": "60,00",
+          "value": 60,
+          "legible": true
+        }
+      },
+      {
+        "index": 3,
+        "material_raw": "pap.",
+        "gross": {
+          "raw": "180",
+          "value": 180,
+          "legible": true
+        },
+        "unit": "lb",
+        "deduction": null,
+        "deduction_reason": null,
+        "net": {
+          "raw": "180",
+          "value": 180,
+          "legible": true
+        },
+        "price": {
+          "raw": "0,05",
+          "value": 0.05,
+          "legible": true
+        },
+        "amount": {
+          "raw": "9,00",
+          "value": 9,
+          "legible": true
+        }
+      }
+    ],
+    "total_net": {
+      "raw": "600",
+      "value": 600,
+      "legible": true
+    },
+    "total_amount": {
+      "raw": "133,00",
+      "value": 133,
+      "legible": true
+    },
+    "notes": []
+  }
+}

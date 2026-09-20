@@ -1,0 +1,124 @@
+{
+  "folio": "008",
+  "photo": "fotos/hoja-008.jpg",
+  "scenario": "Tres unidades distintas en la misma hoja: quintales, libras y kilos.",
+  "expected_flags": [],
+  "extraction": {
+    "header": {
+      "date_raw": "5/03/26",
+      "date_iso": "2026-03-05",
+      "supplier": "Transportes Cedeño",
+      "plate": "MNO-5566",
+      "weigher": "Marcos",
+      "folio": "008",
+      "truck": {
+        "gross": {
+          "raw": "2100",
+          "value": 2100,
+          "legible": true
+        },
+        "tare": {
+          "raw": "1635",
+          "value": 1635,
+          "legible": true
+        },
+        "net": {
+          "raw": "465",
+          "value": 465,
+          "legible": true
+        },
+        "unit": "kg"
+      }
+    },
+    "lines": [
+      {
+        "index": 1,
+        "material_raw": "chat pes",
+        "gross": {
+          "raw": "8",
+          "value": 8,
+          "legible": true
+        },
+        "unit": "qq",
+        "deduction": null,
+        "deduction_reason": null,
+        "net": {
+          "raw": "8",
+          "value": 8,
+          "legible": true
+        },
+        "price": {
+          "raw": "0,15",
+          "value": 0.15,
+          "legible": true
+        },
+        "amount": {
+          "raw": "120,00",
+          "value": 120,
+          "legible": true
+        }
+      },
+      {
+        "index": 2,
+        "material_raw": "pap.",
+        "gross": {
+          "raw": "120",
+          "value": 120,
+          "legible": true
+        },
+        "unit": "lb",
+        "deduction": null,
+        "deduction_reason": null,
+        "net": {
+          "raw": "120",
+          "value": 120,
+          "legible": true
+        },
+        "price": {
+          "raw": "0,05",
+          "value": 0.05,
+          "legible": true
+        },
+        "amount": {
+          "raw": "6,00",
+          "value": 6,
+          "legible": true
+        }
+      },
+      {
+        "index": 3,
+        "material_raw": "plast.",
+        "gross": {
+          "raw": "45",
+          "value": 45,
+          "legible": true
+        },
+        "unit": "kg",
+        "deduction": null,
+        "deduction_reason": null,
+        "net": {
+          "raw": "45",
+          "value": 45,
+          "legible": true
+        },
+        "price": {
+          "raw": "0,18",
+          "value": 0.18,
+          "legible": true
+        },
+        "amount": {
+          "raw": "8,10",
+          "value": 8.1,
+          "legible": true
+        }
+      }
+    ],
+    "total_net": null,
+    "total_amount": {
+      "raw": "134,10",
+      "value": 134.1,
+      "legible": true
+    },
+    "notes": []
+  }
+}
