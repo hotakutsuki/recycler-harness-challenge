@@ -1,9 +1,10 @@
 import type { Metadata, Viewport } from "next";
+import { getLang } from "@/lib/i18n.server";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "RecycleOps",
-  description: "Digitalización de hojas de pesaje",
+  description: "Weighing-sheet digitizer for recycling yards",
 };
 
 export const viewport: Viewport = {
@@ -13,9 +14,10 @@ export const viewport: Viewport = {
   themeColor: "#1f2933",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const lang = await getLang();
   return (
-    <html lang="es">
+    <html lang={lang}>
       <body>{children}</body>
     </html>
   );

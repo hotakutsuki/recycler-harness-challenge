@@ -1,0 +1,139 @@
+// The core entities are deliberately the ones the full yard-management system will
+// need, so this work carries forward rather than being thrown away.
+//
+// SQLite for now: zero setup, real migrations, one line to switch to Postgres.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+/// A photographed sheet, from upload to commit.
+model Sheet {
+  id        String   @id @default(cuid())
+  photoPath String
+  /// queued | extracting | needs_review | ready | failed | committed
+  status    String   @default("queued")
+  /// The model's transcription, stored verbatim as JSON text and never edited.
+  /// Kept beside the corrected values: that pairing is what tells us later how
+  /// well the harness is doing on real sheets.
+  rawExtraction String?
+  /// The flags raised by validation, as JSON text.
+  flags         String?
+  error         String?
+  createdAt     DateTime  @default(now())
+  committedAt   DateTime?
+  /// Photos are deleted after the retention window; the extraction is kept.
+  photoDeletedAt DateTime?
+
+  event       WeighingEvent?
+  corrections Correction[]
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+/// One weighing: a truck (or a walk-in delivery) on one date.
+model WeighingEvent {
+  id       String @id @default(cuid())
+  sheetId  String @unique
+  sheet    Sheet  @relation(fields: [sheetId], references: [id], onDelete: Cascade)
+
+  /// ISO date. Null only while a sheet is still being reviewed — every committed
+  /// sheet has one, because all reporting is keyed on it.
+  date     String?
+  supplier String?
+  plate    String?
+  weigher  String?
+
+  truckGrossKg Float?
+  truckTareKg  Float?
+  truckNetKg   Float?
+  /// The unit the weigher actually wrote, kept so the review screen can show it back.
+  truckUnit    String?
+
+  lines Line[]
+
+  @@index([date])
+  @@index([supplier])
+}
+
+/// One material weighed within an event.
+model Line {
+  id      String        @id @default(cuid())
+  eventId String
+  event   WeighingEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  position Int
+  /// Exactly as written on the sheet: "chat liv", not "Chatarra liviana".
+  materialRaw String
+  materialId  String?
+  material    Material? @relation(fields: [materialId], references: [id])
+
+  unit         String?
+  grossKg      Float?
+  deductionKg  Float?
+  deductionReason String?
+  netKg        Float?
+
+  /// Unit price applied, in the material's price unit. From the sheet when it
+  /// carries prices, otherwise from the catalog.
+  price  Float?
+  amount Float?
+
+  @@index([eventId])
+  @@index([materialId])
+}
+
+model Material {
+  id        String  @id
+  name      String  @unique
+  /// kg | lb | qq | t — the unit the price is quoted in, independent of how a
+  /// given sheet weighs the material.
+  priceUnit String
+  price     Float
+  active    Boolean @default(true)
+  position  Int     @default(0)
+
+  aliases Alias[]
+  lines   Line[]
+}
+
+/// How a material is actually written on sheets.
+model Alias {
+  id         Int      @id @default(autoincrement())
+  text       String   @unique
+  materialId String
+  material   Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+}
+
+/// Every edit a person makes to what the model read. The audit trail is the
+/// reason a yard can trust this at all.
+model Correction {
+  id      String @id @default(cuid())
+  sheetId String
+  sheet   Sheet  @relation(fields: [sheetId], references: [id], onDelete: Cascade)
+
+  field     String
+  fromValue String?
+  toValue   String?
+  user      String?
+  createdAt DateTime @default(now())
+
+  @@index([sheetId])
+}
+
+/// Single row, id = 1.
+model Config {
+  id                 Int    @id @default(1)
+  tolerancePct       Float  @default(10)
+  priceDivergencePct Float  @default(10)
+  currency           String @default("USD")
+  photoRetentionDays Int    @default(90)
+  /// Default UI language: es | en
+  language           String @default("es")
+}
