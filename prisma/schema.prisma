@@ -90,14 +90,19 @@ model Line {
 }
 
 model Material {
-  id        String  @id
-  name      String  @unique
-  /// kg | lb | qq | t — the unit the price is quoted in, independent of how a
-  /// given sheet weighs the material.
-  priceUnit String
-  price     Float
-  active    Boolean @default(true)
-  position  Int     @default(0)
+  id   String @id
+  name String @unique
+  /// kg | lb | qq | t — the unit this material is bought in. The paper almost
+  /// never says, so this is where that knowledge lives.
+  unit String
+  /// What the yard pays per unit, in USD.
+  price Float
+  /// The band a written price may fall in before the line is flagged. Prices are
+  /// negotiated per load, so a fixed price would flag half the honest lines.
+  priceMin Float
+  priceMax Float
+  active   Boolean @default(true)
+  position Int     @default(0)
 
   aliases Alias[]
   lines   Line[]
@@ -129,11 +134,14 @@ model Correction {
 
 /// Single row, id = 1.
 model Config {
-  id                 Int    @id @default(1)
-  tolerancePct       Float  @default(10)
-  priceDivergencePct Float  @default(10)
+  id Int @id @default(1)
+  /// Amounts at the counter are truncated down to a multiple of this.
+  cashRounding Float @default(0.05)
+  /// Band for the price a truck load implies, where no unit price is written.
+  bulkPriceMin Float @default(0.12)
+  bulkPriceMax Float @default(0.45)
   currency           String @default("USD")
   photoRetentionDays Int    @default(90)
   /// Default UI language: es | en
-  language           String @default("es")
+  language String @default("es")
 }

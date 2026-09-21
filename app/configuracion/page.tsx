@@ -26,8 +26,9 @@ async function saveSettings(formData: FormData) {
   await db.config.update({
     where: { id: 1 },
     data: {
-      tolerancePct: num("tolerancePct", 10),
-      priceDivergencePct: num("priceDivergencePct", 10),
+      cashRounding: num("cashRounding", 0.05),
+      bulkPriceMin: num("bulkPriceMin", 0.12),
+      bulkPriceMax: num("bulkPriceMax", 0.45),
       photoRetentionDays: Math.round(num("photoRetentionDays", 90)),
     },
   });
@@ -35,14 +36,17 @@ async function saveSettings(formData: FormData) {
   const materials = await db.material.findMany({ select: { id: true } });
   for (const { id } of materials) {
     const price = Number(formData.get(`price.${id}`));
-    const priceUnit = String(formData.get(`unit.${id}`) ?? "");
+    const priceMin = Number(formData.get(`min.${id}`));
+    const priceMax = Number(formData.get(`max.${id}`));
+    const unit = String(formData.get(`unit.${id}`) ?? "");
     const name = String(formData.get(`name.${id}`) ?? "").trim();
     const aliases = String(formData.get(`aliases.${id}`) ?? "")
       .split(",")
       .map((a) => a.trim())
       .filter(Boolean);
 
-    if (!name || !UNITS.includes(priceUnit as Unit) || !Number.isFinite(price) || price < 0) {
+    const numbersOk = [price, priceMin, priceMax].every((v) => Number.isFinite(v) && v >= 0);
+    if (!name || !UNITS.includes(unit as Unit) || !numbersOk || priceMin > priceMax) {
       continue; // A malformed row is left untouched rather than half-saved.
     }
 
@@ -51,7 +55,9 @@ async function saveSettings(formData: FormData) {
       data: {
         name,
         price,
-        priceUnit,
+        unit,
+        priceMin,
+        priceMax,
         // Aliases are replaced wholesale: the textarea is the full list, and
         // diffing it would only make the save harder to reason about.
         aliases: { deleteMany: {}, create: aliases.map((text) => ({ text })) },
@@ -110,14 +116,25 @@ export default async function ConfiguracionPage({
                 </label>
 
                 <label className="field unit">
-                  <span>{t("settings.priceUnit")}</span>
-                  <select name={`unit.${material.id}`} defaultValue={material.priceUnit}>
+                  <span>{t("settings.unit")}</span>
+                  <select name={`unit.${material.id}`} defaultValue={material.unit}>
                     {UNITS.map((unit) => (
                       <option key={unit} value={unit}>
                         {t(`settings.unit.${unit}`)}
                       </option>
                     ))}
                   </select>
+                </label>
+
+                <label className="field range">
+                  <span>{t("settings.priceRange")}</span>
+                  <span className="withsuffix">
+                    <input name={`min.${material.id}`} type="number" step="0.01" min="0"
+                      inputMode="decimal" defaultValue={material.priceMin} aria-label={t("settings.min")} />
+                    <em>–</em>
+                    <input name={`max.${material.id}`} type="number" step="0.01" min="0"
+                      inputMode="decimal" defaultValue={material.priceMax} aria-label={t("settings.max")} />
+                  </span>
                 </label>
 
                 <label className="field aliases">
@@ -134,39 +151,34 @@ export default async function ConfiguracionPage({
 
           <section className="panel">
             <h3>{t("settings.checks")}</h3>
+            <p className="hint">{t("settings.priceRange.hint")}</p>
 
             <label className="field wide">
-              <span>{t("settings.tolerance")}</span>
+              <span>{t("settings.rounding")}</span>
               <span className="withsuffix">
+                <em>$</em>
                 <input
-                  name="tolerancePct"
+                  name="cashRounding"
                   type="number"
-                  step="0.5"
-                  min="0"
-                  max="100"
+                  step="0.01"
+                  min="0.01"
                   inputMode="decimal"
-                  defaultValue={config?.tolerancePct ?? 10}
+                  defaultValue={config?.cashRounding ?? 0.05}
                 />
-                <em>%</em>
               </span>
-              <small>{t("settings.tolerance.hint")}</small>
+              <small>{t("settings.rounding.hint")}</small>
             </label>
 
             <label className="field wide">
-              <span>{t("settings.priceDivergence")}</span>
+              <span>{t("settings.bulkBand")}</span>
               <span className="withsuffix">
-                <input
-                  name="priceDivergencePct"
-                  type="number"
-                  step="0.5"
-                  min="0"
-                  max="100"
-                  inputMode="decimal"
-                  defaultValue={config?.priceDivergencePct ?? 10}
-                />
-                <em>%</em>
+                <input name="bulkPriceMin" type="number" step="0.01" min="0" inputMode="decimal"
+                  defaultValue={config?.bulkPriceMin ?? 0.12} aria-label={t("settings.min")} />
+                <em>–</em>
+                <input name="bulkPriceMax" type="number" step="0.01" min="0" inputMode="decimal"
+                  defaultValue={config?.bulkPriceMax ?? 0.45} aria-label={t("settings.max")} />
               </span>
-              <small>{t("settings.priceDivergence.hint")}</small>
+              <small>{t("settings.bulkBand.hint")}</small>
             </label>
 
             <label className="field wide">

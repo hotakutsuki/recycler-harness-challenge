@@ -1,119 +1,280 @@
-import fs from "node:fs";
-import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { DEFAULT_CONFIG } from "./catalog";
-import { normalize, resolveMaterial, parseDate } from "./normalize";
-import { Sheet } from "./schema";
-import { validate, type PriorSheet } from "./validate";
+import { DEFAULT_CONFIG, roundCash } from "./catalog";
+import { normalize, parseDate, resolveMaterial } from "./normalize";
+import { Document, type Comprobante, type Tarjeta } from "./schema";
+import { validate } from "./validate";
 
 /**
- * The checks are exercised against the same ground truth the evals use.
- *
- * This is the half of the system that owes nothing to the model: given a perfect
- * transcription, the right sheets must come out flagged and — just as important —
- * the clean ones must come out silent. If this test cannot tell them apart, no
- * amount of extraction quality will save the product.
+ * The checks are exercised against real documents from the yard, transcribed by
+ * hand. Given a perfect transcription the honest documents must come out silent
+ * and the broken ones must come out flagged — a checker that flags everything
+ * would score perfectly on detection and be useless at the counter.
  */
 
-const DATASET = path.join(__dirname, "..", "evals", "dataset");
-const TODAY = new Date("2026-09-19T00:00:00Z");
+const TODAY = new Date("2026-09-21T00:00:00Z");
 
-interface Record {
-  folio: string;
-  scenario: string;
-  expected_flags: { code: string; linea?: number }[];
-  extraction: unknown;
+const n = (raw: string, value: number, replaces: string | null = null) => ({
+  raw,
+  value,
+  legible: true,
+  replaces,
+});
+const illegible = () => ({ raw: "", value: null, legible: false, replaces: null });
+
+const emptySettlement = { total: null, payments: [], owed: null };
+
+function tarjeta(over: Partial<Tarjeta> = {}): Tarjeta {
+  return Document.parse({
+    kind: "tarjeta",
+    card_number: "0000",
+    date_raw: "18/09/2026",
+    counterparty: null,
+    lines: [],
+    settlement: emptySettlement,
+    notes: [],
+    ...over,
+  }) as Tarjeta;
 }
 
-const records: Record[] = fs
-  .readdirSync(DATASET)
-  .filter((f) => f.endsWith(".json"))
-  .sort()
-  .map((f) => JSON.parse(fs.readFileSync(path.join(DATASET, f), "utf8")) as Record);
+function comprobante(over: Partial<Comprobante> = {}): Comprobante {
+  return Document.parse({
+    kind: "comprobante",
+    receipt_number: "000000",
+    date_raw: "18/09/2026",
+    counterparty: null,
+    material_raw: "Chatarra",
+    plate: null,
+    observations: null,
+    weighing: { gross: null, tare: null, net: null, unit: null, deductions: [], final_net: null },
+    settlement: emptySettlement,
+    notes: [],
+    ...over,
+  }) as Comprobante;
+}
 
-describe("the ground truth itself", () => {
-  it("has 16 sheets, half of them clean", () => {
-    expect(records).toHaveLength(16);
-    expect(records.filter((r) => r.expected_flags.length === 0)).toHaveLength(8);
+const check = (doc: Tarjeta | Comprobante, priors: Parameters<typeof validate>[2] = []) =>
+  validate(normalize(doc, DEFAULT_CONFIG, TODAY), DEFAULT_CONFIG, priors, TODAY).map(
+    (f) => `${f.code}${f.line ? `:${f.line}` : ""}`,
+  );
+
+// Tarjeta 2784, transcribed from the photo. Every line and the total add up.
+const TARJETA_2784 = tarjeta({
+  card_number: "2784",
+  lines: [
+    { index: 1, quantity: n("98", 98),       material_raw: "Pet",          unit_price: n("0,78", 0.78), amount: n("76,40", 76.4),  note: null },
+    { index: 2, quantity: n("240", 240),     material_raw: "Perfil",       unit_price: n("1,40", 1.4),  amount: n("336,00", 336),  note: null },
+    { index: 3, quantity: n("131,5", 131.5), material_raw: "grues",        unit_price: n("1,15", 1.15), amount: n("151,20", 151.2), note: "ALU" },
+    { index: 4, quantity: n("80", 80),       material_raw: "cobre",        unit_price: n("6,20", 6.2),  amount: n("496,00", 496),  note: null },
+    { index: 5, quantity: n("277,5", 277.5), material_raw: "fundido",      unit_price: n("0,15", 0.15), amount: n("41,60", 41.6),  note: null },
+    { index: 6, quantity: n("14", 14),       material_raw: "Radiador ALU", unit_price: n("0,90", 0.9),  amount: n("12,60", 12.6),  note: null },
+  ],
+  settlement: { total: n("1113,80", 1113.8), payments: [], owed: null },
+});
+
+// Comprobante 015641: 5910 − 4030 = 1880, less an 80 deduction, paid 450.
+const COMPROBANTE_015641 = comprobante({
+  receipt_number: "015641",
+  weighing: {
+    gross: n("5910", 5910),
+    tare: n("4030", 4030),
+    net: n("1880", 1880),
+    unit: null,
+    deductions: [{ amount: n("80", 80), reason: "3 perfil lavadora" }],
+    final_net: n("1800", 1800),
+  },
+  settlement: { total: n("450", 450, "300"), payments: [], owed: null },
+});
+
+// Tarjeta 2781: the weigher totalled 830,65, caught it, and wrote 850,15 above.
+// Then paid 500 in cash and carried 350 as a debt.
+const TARJETA_2781 = tarjeta({
+  card_number: "2781",
+  lines: [
+    { index: 1, quantity: n("93", 93),   material_raw: "Radiador ALU", unit_price: n("0,85", 0.85), amount: n("79,05", 79.05), note: null },
+    { index: 2, quantity: n("51", 51),   material_raw: "cobre",        unit_price: n("6,10", 6.1),  amount: n("311,10", 311.1), note: null },
+    { index: 3, quantity: n("115", 115), material_raw: "bronce",       unit_price: n("4,00", 4, "3,00"), amount: n("460", 460), note: null },
+  ],
+  settlement: {
+    total: n("850,15", 850.15, "830,65"),
+    payments: [{ kind: "efectivo", amount: n("500", 500), raw: "-500 efect" }],
+    owed: n("350", 350),
+  },
+});
+
+describe("documents that are correct must come out silent", () => {
+  it("tarjeta 2784 — six lines, all of them rounded down to five cents", () => {
+    expect(check(TARJETA_2784)).toEqual([]);
   });
 
-  it("parses against the schema the model is held to", () => {
-    for (const r of records) {
-      expect(() => Sheet.parse(r.extraction), `hoja ${r.folio}`).not.toThrow();
-    }
+  it("comprobante 015641 — weighing, deduction and an implied price of 0,25", () => {
+    expect(check(COMPROBANTE_015641)).toEqual([]);
+  });
+
+  it("tarjeta 2781 — reads the corrected total, not the crossed-out one", () => {
+    expect(check(TARJETA_2781)).toEqual([]);
+  });
+
+  it("would flag 2781 if the model had read the struck-through total instead", () => {
+    const misread = tarjeta({
+      ...TARJETA_2781,
+      settlement: { ...TARJETA_2781.settlement, total: n("830,65", 830.65) },
+    });
+    expect(check(misread)).toContain("V4");
   });
 });
 
-describe("validation over the dataset", () => {
-  // Sheets are validated in folio order and fed forward, so the duplicate on 013
-  // is detected the way it would be in the app: against what came before it.
-  const priors: PriorSheet[] = [];
-  const results = records.map((r) => {
-    const sheet = normalize(Sheet.parse(r.extraction), DEFAULT_CONFIG, TODAY);
-    const flags = validate(sheet, DEFAULT_CONFIG, [...priors], TODAY);
-    priors.push({
-      dateIso: sheet.dateIso,
-      supplier: sheet.supplier,
-      plate: sheet.plate,
-      linesTotalKg: sheet.linesTotalKg,
-      folio: sheet.folio,
-    });
-    return { record: r, flags };
+describe("the counter's rounding rule", () => {
+  it("truncates down to five cents rather than to the nearest", () => {
+    expect(roundCash(76.44, 0.05)).toBeCloseTo(76.4, 2);
+    expect(roundCash(151.225, 0.05)).toBeCloseTo(151.2, 2);
+    expect(roundCash(41.625, 0.05)).toBeCloseTo(41.6, 2);
+    expect(roundCash(0.825, 0.05)).toBeCloseTo(0.8, 2);
+    expect(roundCash(336, 0.05)).toBeCloseTo(336, 2);
   });
 
-  for (const { record, flags } of results) {
-    it(`hoja ${record.folio}: ${record.scenario}`, () => {
-      const got = flags
-        .map((f) => `${f.code}${f.line ? `:${f.line}` : ""}`)
-        .sort();
-      const want = record.expected_flags
-        .map((f) => `${f.code}${f.linea ? `:${f.linea}` : ""}`)
-        .sort();
-      expect(got).toEqual(want);
-    });
-  }
+  it("without it, honest lines would be flagged — which is the real risk", () => {
+    const line = TARJETA_2784.lines[0]!; // 98 × 0,78 = 76,44 written as 76,40
+    expect(Math.abs(98 * 0.78 - line.amount!.value!)).toBeGreaterThan(0.03);
+    expect(check(TARJETA_2784)).toEqual([]);
+  });
+});
 
-  it("raises nothing at all on the eight clean sheets", () => {
-    const noisy = results
-      .filter(({ record, flags }) => record.expected_flags.length === 0 && flags.length > 0)
-      .map(({ record, flags }) => `${record.folio}: ${flags.map((f) => f.code).join(", ")}`);
-    expect(noisy).toEqual([]);
+describe("documents that are wrong must be caught", () => {
+  it("a miscalculated line", () => {
+    const doc = tarjeta({
+      lines: [
+        { index: 1, quantity: n("400", 400), material_raw: "carton", unit_price: n("0,04", 0.04), amount: n("18,00", 18), note: null },
+      ],
+      settlement: { total: n("18,00", 18), payments: [], owed: null },
+    });
+    expect(check(doc)).toContain("V1:1");
+  });
+
+  it("a total that does not match the lines", () => {
+    const doc = tarjeta({
+      lines: [
+        { index: 1, quantity: n("10", 10), material_raw: "pet", unit_price: n("0,78", 0.78), amount: n("7,80", 7.8), note: null },
+      ],
+      settlement: { total: n("9,00", 9), payments: [], owed: null },
+    });
+    expect(check(doc)).toContain("V4");
+  });
+
+  it("a truck subtraction that does not hold", () => {
+    const doc = comprobante({
+      weighing: { gross: n("5000", 5000), tare: n("3900", 3900), net: n("1200", 1200), unit: null, deductions: [], final_net: null },
+      settlement: { total: n("300", 300), payments: [], owed: null },
+    });
+    expect(check(doc)).toContain("V2");
+  });
+
+  it("a deduction that does not come off the net properly", () => {
+    const doc = comprobante({
+      weighing: {
+        gross: n("3000", 3000), tare: n("1000", 1000), net: n("2000", 2000), unit: null,
+        deductions: [{ amount: n("80", 80), reason: "tanque" }],
+        final_net: n("1950", 1950),
+      },
+      settlement: { total: n("487,50", 487.5), payments: [], owed: null },
+    });
+    expect(check(doc)).toContain("V3");
+  });
+
+  it("tolerates the cents dropped when cash changes hands", () => {
+    // Card 2781: 850,15 − 500 in cash was settled as a round 350.
+    expect(check(TARJETA_2781)).toEqual([]);
+  });
+
+  it("a settlement that does not balance", () => {
+    const doc = tarjeta({
+      lines: [
+        { index: 1, quantity: n("100", 100), material_raw: "pet", unit_price: n("0,78", 0.78), amount: n("78,00", 78), note: null },
+      ],
+      settlement: {
+        total: n("78,00", 78),
+        payments: [{ kind: "efectivo", amount: n("50", 50), raw: "50 efect" }],
+        owed: n("8", 8), // should be 28: a dollar of rounding cannot explain this
+      },
+    });
+    expect(check(doc)).toContain("V6");
+  });
+
+  it("a material nobody in the catalog knows", () => {
+    const doc = tarjeta({
+      lines: [
+        { index: 1, quantity: n("25", 25), material_raw: "zamak", unit_price: n("2,00", 2), amount: n("50,00", 50), note: null },
+      ],
+      settlement: { total: n("50,00", 50), payments: [], owed: null },
+    });
+    expect(check(doc)).toContain("V5:1");
+  });
+
+  it("a scribbled-out weight, with no value invented to replace it", () => {
+    const doc = tarjeta({
+      lines: [
+        { index: 1, quantity: illegible(), material_raw: "pet", unit_price: n("0,78", 0.78), amount: illegible(), note: null },
+      ],
+      settlement: { total: n("10,00", 10), payments: [], owed: null },
+    });
+    expect(check(doc)).toEqual(["V9:1"]);
+  });
+
+  it("a price outside the band the material trades in", () => {
+    const doc = tarjeta({
+      lines: [
+        { index: 1, quantity: n("10", 10), material_raw: "cobre", unit_price: n("0,61", 0.61), amount: n("6,10", 6.1), note: null },
+      ],
+      settlement: { total: n("6,10", 6.1), payments: [], owed: null },
+    });
+    expect(check(doc)).toContain("PRECIO:1");
+  });
+
+  it("a truck load settled at an implausible price per unit", () => {
+    const doc = comprobante({
+      weighing: { gross: n("5000", 5000), tare: n("4000", 4000), net: n("1000", 1000), unit: null, deductions: [], final_net: null },
+      settlement: { total: n("2500", 2500), payments: [], owed: null }, // 2,50 per unit
+    });
+    expect(check(doc)).toContain("PRECIO");
+  });
+
+  it("the same folio photographed twice", () => {
+    const priors = [{ kind: "comprobante", folio: "015641", dateIso: "2026-09-18", total: 450 }];
+    expect(check(COMPROBANTE_015641, priors)).toContain("V8");
   });
 });
 
 describe("material resolution", () => {
   const { materials } = DEFAULT_CONFIG;
 
-  it("matches the abbreviations the yard actually writes", () => {
-    expect(resolveMaterial("chat liv", materials).material?.id).toBe("chatarra_liviana");
-    expect(resolveMaterial("fierro", materials).material?.id).toBe("hierro");
-    expect(resolveMaterial("cobre 1ra", materials).material?.id).toBe("cobre");
-    expect(resolveMaterial("CART.", materials).material?.id).toBe("carton");
-    expect(resolveMaterial("plástico", materials).material?.id).toBe("plastico");
+  it("matches what the weigher actually writes", () => {
+    expect(resolveMaterial("Pet", materials).material?.id).toBe("pet");
+    expect(resolveMaterial("grues", materials).material?.id).toBe("gruesa");
+    expect(resolveMaterial("chat", materials).material?.id).toBe("chatarra");
+    expect(resolveMaterial("Radiador ALU", materials).material?.id).toBe("radiador");
   });
 
-  it("refuses to guess at a material it does not know", () => {
-    const result = resolveMaterial("bronce", materials);
+  it("suggests rather than decides when the match is not exact", () => {
+    expect(resolveMaterial("chatara", materials).match).toBe("fuzzy");
+    expect(resolveMaterial("Pet", materials).match).toBe("alias");
+  });
+
+  it("refuses to guess at something it does not know", () => {
+    const result = resolveMaterial("zamak", materials);
     expect(result.match).toBe("unknown");
     expect(result.material).toBeNull();
-  });
-
-  it("suggests rather than decides on a near miss", () => {
-    const result = resolveMaterial("carbon", materials);
-    if (result.material) expect(result.match).toBe("fuzzy");
   });
 });
 
 describe("dates", () => {
-  it("reads the formats that appear on the sheets", () => {
-    expect(parseDate("2/03/26", TODAY)).toBe("2026-03-02");
-    expect(parseDate("15-03-2026", TODAY)).toBe("2026-03-15");
+  it("reads the formats on these documents", () => {
+    expect(parseDate("18/09/2026", TODAY)).toBe("2026-09-18");
+    expect(parseDate("18/9/2026", TODAY)).toBe("2026-09-18");
+    expect(parseDate("14/09/2026", TODAY)).toBe("2026-09-14");
   });
 
   it("returns null rather than guessing", () => {
-    expect(parseDate("marzo", TODAY)).toBeNull();
-    expect(parseDate("32/03/26", TODAY)).toBeNull();
-    expect(parseDate("2/13/26", TODAY)).toBeNull();
+    expect(parseDate("18/09", TODAY)).toBeNull();
+    expect(parseDate("32/09/2026", TODAY)).toBeNull();
     expect(parseDate(null, TODAY)).toBeNull();
   });
 });

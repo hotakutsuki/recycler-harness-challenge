@@ -3,18 +3,18 @@ digraph pipeline {
   node [fontname="DejaVu Sans", fontsize=11, shape=box, style="rounded,filled", color="#7a8899"];
   edge [fontname="DejaVu Sans", fontsize=9, color="#5a6878"];
 
-  photo   [label="Photo of a handwritten\nweighing detail sheet", shape=note, fillcolor="#eef2f6"];
+  photo   [label="Photo: weigher's tarjeta\nor truck comprobante", shape=note, fillcolor="#eef2f6"];
   pre     [label="Preprocess\nresize · orientation", fillcolor="#eef2f6"];
-  ex      [label="EXTRACT  —  model\ntranscribes only: raw + value + legible", fillcolor="#e8e2f3", color="#8878b0"];
-  norm    [label="NORMALIZE  —  code\nkg · lb · qq · t → kg ; aliases → catalog", fillcolor="#fdf0c9", color="#c9a227"];
-  val     [label="VALIDATE  —  code\nV1–V9 arithmetic & plausibility", fillcolor="#fdf0c9", color="#c9a227"];
+  ex      [label="CLASSIFY and EXTRACT  —  model\nwhich document + transcribes: raw · value · legible · replaces", fillcolor="#e8e2f3", color="#8878b0"];
+  norm    [label="NORMALIZE  —  code\naliases → catalog ; truncate cash down to 5 cents", fillcolor="#fdf0c9", color="#c9a227"];
+  val     [label="VALIDATE  —  code\nV1–V9 + PRECIO: arithmetic, settlement, plausibility", fillcolor="#fdf0c9", color="#c9a227"];
   ok      [label="ready", shape=oval, fillcolor="#dcecdf", color="#5f8f6c"];
   reread  [label="Independent re-read of failing fields\n(the model is NOT told which answer would pass)", fillcolor="#e8e2f3", color="#8878b0"];
   agree   [label="Both readings agree?", shape=diamond, fillcolor="#ffffff", color="#7a8899"];
   human   [label="needs review  —  human\nphoto side by side, issues in plain Spanish", shape=oval, fillcolor="#fbe3e3", color="#b06a6a"];
   commit  [label="Human commits the sheet", fillcolor="#dcecdf", color="#5f8f6c"];
   db      [label="Ledger (committed only)", shape=cylinder, fillcolor="#dcecdf", color="#5f8f6c"];
-  rep     [label="Inventory & cash reports", shape=note, fillcolor="#dcecdf", color="#5f8f6c"];
+  rep     [label="Report: material in,\nmoney out, balances owed", shape=note, fillcolor="#dcecdf", color="#5f8f6c"];
 
   photo -> pre -> ex -> norm -> val;
   val -> ok [label="  all checks pass"];

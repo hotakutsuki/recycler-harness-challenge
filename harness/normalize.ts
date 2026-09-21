@@ -1,13 +1,13 @@
 import type { Config, Material } from "./catalog";
-import type { NumberField, Sheet, Unit } from "./schema";
+import type { Document, NumberField, Unit } from "./schema";
 import { toKg } from "./units";
 
 /**
- * Turns a transcription into comparable numbers: weights in kilograms, materials
- * resolved against the catalog, the date in ISO.
+ * Turns a transcription into comparable numbers: materials resolved against the
+ * catalog, weights carrying the unit they are actually in, money as numbers.
  *
- * Pure, and deliberately free of judgement — it never decides a sheet is wrong,
- * only what its values mean. Deciding is validate.ts's job.
+ * Pure, and deliberately without judgement — it decides what the ink *means*,
+ * never whether it is right. Deciding is validate.ts's job.
  */
 
 export type MatchKind = "alias" | "fuzzy" | "unknown" | "missing";
@@ -18,39 +18,56 @@ export interface NormalizedLine {
   materialId: string | null;
   materialName: string | null;
   match: MatchKind;
-  /** Only set for a fuzzy match: what it matched and how closely, for the UI to show. */
   matchScore?: number;
+  quantity: number | null;
+  /** The unit the quantity is in: written on the document, else the catalog's. */
   unit: Unit | null;
-  grossKg: number | null;
-  deductionKg: number | null;
-  netKg: number | null;
-  /** Net weight expressed in the unit the material is priced in. */
-  netInPriceUnit: number | null;
-  price: number | null;
-  /** The catalog price, for comparison against what the sheet says. */
+  /** Only set when the unit is known, for reports that add materials together. */
+  quantityKg: number | null;
+  unitPrice: number | null;
   catalogPrice: number | null;
+  priceRange: { min: number; max: number } | null;
   amount: number | null;
-  /** True when a weight on this line was marked illegible by the model. */
   illegible: boolean;
+  note: string | null;
 }
 
-export interface NormalizedSheet {
-  dateIso: string | null;
-  supplier: string | null;
-  plate: string | null;
+export interface NormalizedSettlement {
+  total: number | null;
+  paid: number | null;
+  owed: number | null;
+  methods: string[];
+}
+
+export interface NormalizedDocument {
+  kind: "tarjeta" | "comprobante";
+  /** Card number or receipt number — what identifies this piece of paper. */
   folio: string | null;
-  truck: { grossKg: number | null; tareKg: number | null; netKg: number | null; unit: Unit | null } | null;
+  dateIso: string | null;
+  counterparty: string | null;
   lines: NormalizedLine[];
-  totalNetKg: number | null;
-  totalAmount: number | null;
-  /** Sum of the line nets, in kg — the number that gets compared with the truck. */
-  linesTotalKg: number | null;
+  /** Sum of the line amounts, when every line has one. */
+  linesTotal: number | null;
+  truck: {
+    gross: number | null;
+    tare: number | null;
+    net: number | null;
+    deductions: number;
+    finalNet: number | null;
+    unit: Unit | null;
+  } | null;
+  /** Material of the whole load, on a comprobante. */
+  bulkMaterialId: string | null;
+  bulkMaterialName: string | null;
+  bulkMatch: MatchKind | null;
+  settlement: NormalizedSettlement;
+  illegibleFields: number;
 }
 
 const val = (f: NumberField | null | undefined): number | null =>
   f && f.legible ? f.value : null;
 
-const isIllegible = (...fields: (NumberField | null | undefined)[]): boolean =>
+const unreadable = (...fields: (NumberField | null | undefined)[]): boolean =>
   fields.some((f) => f != null && !f.legible);
 
 /** Lowercase, strip accents and punctuation, collapse spaces: "Chat. Liv." -> "chat liv". */
@@ -64,7 +81,6 @@ export function fold(text: string): string {
     .trim();
 }
 
-/** Levenshtein distance, capped by nothing clever — these strings are a few words long. */
 function distance(a: string, b: string): number {
   const prev: number[] = Array.from({ length: b.length + 1 }, (_, i) => i);
   const cur: number[] = new Array<number>(b.length + 1).fill(0);
@@ -82,11 +98,13 @@ function distance(a: string, b: string): number {
 /**
  * Resolves what the weigher wrote to a catalog material.
  *
- * Three steps, in order, and the distinction between them matters: an exact alias
- * is trusted silently, a fuzzy match is only ever a *suggestion* that gets flagged
- * for a human, and anything else is unknown. The system never quietly decides that
- * "bronce" was probably meant to be "hierro" — that would put the wrong material in
- * inventory and nobody would ever know.
+ * Three outcomes, and the difference between them is the point: an exact alias is
+ * trusted silently, a fuzzy match is only ever a *suggestion* that gets flagged,
+ * and anything else is unknown. "Bronce" must never quietly become "hierro" —
+ * that puts the wrong material in inventory and nobody ever finds out.
+ *
+ * Tags the yard writes after the material ("Radiador ALU", "cobre 1ra") are part
+ * of the name here; the catalog carries them as aliases when they matter.
  */
 export function resolveMaterial(
   raw: string,
@@ -96,41 +114,52 @@ export function resolveMaterial(
   if (!needle) return { material: null, match: "missing" };
 
   for (const m of materials) {
-    const candidates = [m.name, ...m.aliases].map(fold);
-    if (candidates.includes(needle)) return { material: m, match: "alias" };
-  }
-
-  // A written form that is a prefix of the canonical name, word by word:
-  // "chat liv" -> "chatarra liviana". Common, and safe enough to suggest.
-  const words = needle.split(" ");
-  for (const m of materials) {
-    const nameWords = fold(m.name).split(" ");
-    if (
-      words.length === nameWords.length &&
-      words.every((w, i) => nameWords[i]!.startsWith(w) && w.length >= 3)
-    ) {
-      return { material: m, match: "fuzzy", score: 0.9 };
+    if ([m.name, ...m.aliases].map(fold).includes(needle)) {
+      return { material: m, match: "alias" };
     }
   }
 
-  // Last resort: a near-miss on spelling ("carbon" vs "carton").
+  // The written form starts the catalog word, word by word: "grues" -> "gruesa".
+  const words = needle.split(" ");
+  for (const m of materials) {
+    for (const candidate of [m.name, ...m.aliases].map(fold)) {
+      const candidateWords = candidate.split(" ");
+      if (
+        words.length === candidateWords.length &&
+        words.every((w, i) => candidateWords[i]!.startsWith(w) && w.length >= 3)
+      ) {
+        return { material: m, match: "fuzzy", score: 0.9 };
+      }
+    }
+  }
+
+  // A tag after the material name: "radiador alu" -> "radiador".
+  const head = words[0]!;
+  if (head.length >= 4) {
+    for (const m of materials) {
+      if ([m.name, ...m.aliases].map(fold).includes(head)) {
+        return { material: m, match: "fuzzy", score: 0.85 };
+      }
+    }
+  }
+
+  // Last resort: a near-miss on spelling, which handwriting produces constantly.
   let best: { m: Material; score: number } | null = null;
   for (const m of materials) {
     for (const candidate of [m.name, ...m.aliases].map(fold)) {
-      const d = distance(needle, candidate);
-      const score = 1 - d / Math.max(needle.length, candidate.length);
+      const score = 1 - distance(needle, candidate) / Math.max(needle.length, candidate.length);
       if (!best || score > best.score) best = { m, score };
     }
   }
-  if (best && best.score >= 0.8) return { material: best.m, match: "fuzzy", score: best.score };
+  if (best && best.score >= 0.75) return { material: best.m, match: "fuzzy", score: best.score };
 
   return { material: null, match: "unknown" };
 }
 
 /**
- * Parses a written date. Returns null whenever the reading would be a guess —
- * an ambiguous day/month ("03/04/26") is worth a human's two seconds, not a
- * coin flip that lands in the wrong month's cash report.
+ * Parses a written date, returning null whenever reading it would be a guess.
+ * An ambiguous day/month is worth two seconds of a human's time, not a coin flip
+ * that lands in the wrong month's cash report.
  */
 export function parseDate(raw: string | null, today = new Date()): string | null {
   if (!raw) return null;
@@ -152,73 +181,109 @@ export function parseDate(raw: string | null, today = new Date()): string | null
   return Number.isNaN(parsed.getTime()) || parsed.getUTCDate() !== day ? null : iso;
 }
 
-export function normalize(sheet: Sheet, config: Config, today = new Date()): NormalizedSheet {
-  const lines = sheet.lines.map((line): NormalizedLine => {
-    const { material, match, score } = resolveMaterial(line.material_raw, config.materials);
-    const unit = line.unit;
+function normalizeSettlement(
+  settlement: Document["settlement"],
+): NormalizedSettlement {
+  const paid = settlement.payments
+    .filter((p) => p.kind !== "debe")
+    .map((p) => val(p.amount))
+    .filter((n): n is number => n != null);
 
-    const gross = val(line.gross);
-    const deduction = val(line.deduction);
-    const net = val(line.net);
-
-    const kg = (n: number | null) => (n != null && unit ? toKg(n, unit) : null);
-    const netKg = kg(net);
-
-    return {
-      index: line.index,
-      materialRaw: line.material_raw,
-      materialId: material?.id ?? null,
-      materialName: material?.name ?? null,
-      match,
-      ...(score != null ? { matchScore: score } : {}),
-      unit,
-      grossKg: kg(gross),
-      deductionKg: kg(deduction),
-      netKg,
-      netInPriceUnit:
-        netKg != null && material ? netKg / toKg(1, material.priceUnit) : null,
-      price: val(line.price),
-      catalogPrice: material?.price ?? null,
-      amount: val(line.amount),
-      illegible: isIllegible(line.gross, line.net, line.deduction, line.price, line.amount),
-    };
-  });
-
-  const netKgs = lines.map((l) => l.netKg);
-  const linesTotalKg = netKgs.some((n) => n == null)
-    ? null
-    : netKgs.reduce((sum: number, n) => sum + n!, 0);
-
-  const truckUnit = sheet.header.truck?.unit ?? null;
-  const truckKg = (f: NumberField | null | undefined) => {
-    const v = val(f);
-    return v != null && truckUnit ? toKg(v, truckUnit) : null;
-  };
+  const owedFromPayments = settlement.payments
+    .filter((p) => p.kind === "debe")
+    .map((p) => val(p.amount))
+    .filter((n): n is number => n != null);
 
   return {
-    // The model may offer an ISO date, but we re-derive it from the ink: the
-    // transcription is what was verified against the photo, not the model's parse.
-    dateIso: parseDate(sheet.header.date_raw, today),
-    supplier: sheet.header.supplier,
-    plate: sheet.header.plate,
-    folio: sheet.header.folio,
-    truck: sheet.header.truck
-      ? {
-          grossKg: truckKg(sheet.header.truck.gross),
-          tareKg: truckKg(sheet.header.truck.tare),
-          netKg: truckKg(sheet.header.truck.net),
-          unit: truckUnit,
-        }
-      : null,
-    lines,
-    totalNetKg: truckUnit || lines[0]?.unit
-      ? (() => {
-          const v = val(sheet.total_net);
-          const unit = truckUnit ?? lines[0]?.unit ?? null;
-          return v != null && unit ? toKg(v, unit) : null;
-        })()
-      : null,
-    totalAmount: val(sheet.total_amount),
-    linesTotalKg,
+    total: val(settlement.total),
+    paid: paid.length ? paid.reduce((a, b) => a + b, 0) : null,
+    owed: val(settlement.owed) ?? owedFromPayments[0] ?? null,
+    methods: settlement.payments.map((p) => p.kind),
+  };
+}
+
+export function normalize(
+  doc: Document,
+  config: Config,
+  today = new Date(),
+): NormalizedDocument {
+  const settlement = normalizeSettlement(doc.settlement);
+  const dateIso = parseDate(doc.date_raw, today);
+
+  if (doc.kind === "tarjeta") {
+    const lines = doc.lines.map((line): NormalizedLine => {
+      const { material, match, score } = resolveMaterial(line.material_raw, config.materials);
+      const quantity = val(line.quantity);
+      const unit = material?.unit ?? null;
+
+      return {
+        index: line.index,
+        materialRaw: line.material_raw,
+        materialId: material?.id ?? null,
+        materialName: material?.name ?? null,
+        match,
+        ...(score != null ? { matchScore: score } : {}),
+        quantity,
+        unit,
+        quantityKg: quantity != null && unit ? toKg(quantity, unit) : null,
+        unitPrice: val(line.unit_price),
+        catalogPrice: material?.price ?? null,
+        priceRange: material?.priceRange ?? null,
+        amount: val(line.amount),
+        illegible: unreadable(line.quantity, line.unit_price, line.amount),
+        note: line.note,
+      };
+    });
+
+    const amounts = lines.map((l) => l.amount);
+
+    return {
+      kind: "tarjeta",
+      folio: doc.card_number,
+      dateIso,
+      counterparty: doc.counterparty,
+      lines,
+      linesTotal: amounts.every((a) => a != null)
+        ? amounts.reduce((sum: number, a) => sum + a!, 0)
+        : null,
+      truck: null,
+      bulkMaterialId: null,
+      bulkMaterialName: null,
+      bulkMatch: null,
+      settlement,
+      illegibleFields: lines.filter((l) => l.illegible).length,
+    };
+  }
+
+  const bulk = doc.material_raw
+    ? resolveMaterial(doc.material_raw, config.materials)
+    : { material: null, match: "missing" as MatchKind };
+
+  const w = doc.weighing;
+  const deductions = w.deductions
+    .map((d) => val(d.amount))
+    .filter((n): n is number => n != null)
+    .reduce((a, b) => a + b, 0);
+
+  return {
+    kind: "comprobante",
+    folio: doc.receipt_number,
+    dateIso,
+    counterparty: doc.counterparty,
+    lines: [],
+    linesTotal: null,
+    truck: {
+      gross: val(w.gross),
+      tare: val(w.tare),
+      net: val(w.net),
+      deductions,
+      finalNet: val(w.final_net) ?? val(w.net),
+      unit: w.unit,
+    },
+    bulkMaterialId: bulk.material?.id ?? null,
+    bulkMaterialName: bulk.material?.name ?? null,
+    bulkMatch: bulk.match,
+    settlement,
+    illegibleFields: unreadable(w.gross, w.tare, w.net, w.final_net) ? 1 : 0,
   };
 }

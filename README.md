@@ -49,23 +49,19 @@ Photos and the SQLite database are written to `./data`, which is not in version 
 
 ## Evaluation
 
-Quality is measured against 16 sheets written and photographed by hand, and they are in
-this repo — photos and ground truth both — so `npm run eval` reproduces the numbers.
+Quality is measured against **27 real documents** from a recycling yard in Quito — a
+week of its paperwork, photographed with a phone: tarjetas and comprobantes mixed, at
+angles, under shadow and yellow light, some creased.
 
-Eight are clean and eight carry a seeded problem: a wrong amount, a detail total outside
-tolerance, a price that diverges from the catalog, an unknown material, an illegible
-field, a truck subtraction that does not add up, a deduction that does not add up, and a
-duplicate. The half-and-half split is deliberate — with only broken sheets you measure
-detection and never see the false alarms on good sheets, which is what would make the
-system unbearable for the person doing the reviewing.
+The company logo and every person's name are masked in the copies published here.
+Weights, prices, totals and the margin notes are untouched, because those are what the
+harness is judged on.
 
-The headline metric is the **silent error rate**: fields committed with a wrong value and
-*no* flag. That is the error that actually costs a yard money, and it is what every
-change to the prompt, the model or the checks is judged against.
-
-These are synthetic sheets written by us, modelled on how an Ecuadorian yard actually
-writes: free-form on blank paper, no printed form, mixed units, local abbreviations.
-No real yard's data is in this repository.
+The headline metric is the **silent error rate**: a field committed with a wrong value
+and *no* flag. That is the error that actually costs a yard money, and it is what every
+change to the prompt, the model or the checks is judged against. Alongside it: document
+type accuracy, field accuracy, whether a corrected total is read as the correction rather
+than the struck-out figure, and the false-flag rate on documents that are perfectly fine.
 
 ## How it works, briefly
 
@@ -75,9 +71,15 @@ adjust a digit until the total works out, and a fabricated number that passes ev
 is the most expensive failure this system could produce.
 
 ```
-photo → extract (vision, strict schema) → normalize (units, material aliases)
-      → validate (arithmetic + plausibility) → human review → committed → reports
+photo → extract (vision, strict schema, model says which document this is)
+      → normalize (materials, prices, the counter's rounding rule)
+      → validate (arithmetic + plausibility) → human review → committed → report
 ```
+
+Two kinds of paper go through one pipeline: a handwritten **tarjeta** (one line per
+material, free-form) and a pre-printed **comprobante** for truck loads (weighed full,
+weighed empty, the difference is what gets paid for). They arrive mixed, because a yard
+photographs the day's paper in one go and does not sort it first.
 
 `harness/` is plain TypeScript with no Next.js imports, so the app and the eval runner
 execute identical code. Full architecture, the nine validation checks, and the reasoning

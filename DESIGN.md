@@ -1,6 +1,6 @@
 # Design Doc — Weighing-Sheet Digitizer for Recycling Yards
 
-> **Status:** Draft v0.3 (2026-09-19). Items marked **[ASSUMPTION]** are placeholders until real documents from a partner recycling yard arrive.
+> **Status:** Draft v0.4 (2026-09-21). Items marked **[ASSUMPTION]** are placeholders until real documents from a partner recycling yard arrive.
 > Product name: *RecycleOps*.
 
 ---
@@ -9,11 +9,12 @@
 
 **Who.** Small and mid-sized recycling yards in Ecuador (paper, cardboard, plastics, ferrous and non-ferrous scrap). They buy material from collectors and trucks, sort it, store it, and resell it. Some also charge for use of their truck scale.
 
-**How they work today.** Everything is on paper and in spreadsheets:
-- A truck is weighed on the truck scale (gross / tare / net).
-- The load is then sorted, and a weigher re-weighs each material on a smaller scale, writing a **detail sheet** by hand: material, weight, and *deductions* (e.g. a radiator is weighed whole, then a deduction is noted for its plastic parts).
-- The owner considers this sheet one of the most important documents in the yard: it is what the supplier gets paid on and what inventory is built from.
-- Someone later re-types these sheets into several Excel files to get cash reports and current inventory.
+**How they work today.** Everything is on paper and in spreadsheets, and there are two kinds of paper. We have 27 real documents from one yard in Quito, all from a single week:
+
+- **Tarjeta** — a numbered green card for walk-in suppliers arriving with a handcart or a few sacks. The weigher writes one line per material, free-form on blank space: quantity, unit price, amount. Then a total, and often what was paid and what is still owed. No grid, no columns, three pen colours on the same card.
+- **Comprobante de ingreso** — a pre-printed receipt for truck loads. The truck is weighed full (*E*, entero), then empty (*S*, solo camión); the difference is the net (*N*). Deductions come off that ("− 80, 2 tanques filtros"), and one total is paid for the whole load. **The unit price is never written down.**
+- Both end the same way for the business: material came in and money went out — often only part of the money, because the rest is carried as a debt to the supplier.
+- Someone later re-types all of it into several Excel files to get cash reports and current inventory.
 
 **What it costs.**
 - Hours of manual data entry per week, done late and in batches.
@@ -21,7 +22,7 @@
 - No trustworthy "current inventory" or "cash this month" without a manual reconciliation.
 - **For us as a vendor:** this paper backlog is the main barrier to adopting a proper yard-management system. A yard won't switch if its history stays on paper.
 
-**Why an AI harness fits.** Reading messy handwriting, local material slang, and mixed units is exactly where rule-based OCR breaks and vision LLMs are strong. These sheets also carry a lot of **built-in redundancy** (line arithmetic, sheet totals vs. truck net weight), so the model's reading can be *checked by code* instead of trusted blindly.
+**Why an AI harness fits.** Handwriting, local material slang and free-form layout are exactly where rule-based OCR breaks and vision models are strong — these documents have no grid to anchor on, and a crossed-out total sitting under its correction is routine. They also carry a lot of **built-in redundancy**: every tarjeta line is quantity × price = amount, the total is the sum of the lines, and on a comprobante E − S = N. So the model's reading can be *checked by code* rather than trusted, which is what makes this safe enough to put near money.
 
 **Where it does *not* fit.**
 - The model must never decide money. When numbers don't reconcile, a human decides.
@@ -32,16 +33,18 @@
 
 **In scope, real end to end:**
 
-> Photo of a handwritten **weighing detail sheet** → extraction → normalization (materials, units) → validation → human review of flagged fields → saved records → two reports: **current inventory by material** and **cash for the month**.
+> Photo of a **tarjeta or a comprobante** → the model classifies which it is and extracts it → normalization (materials, prices) → validation → human review of what was flagged → committed records → a report of what came in and what was paid out.
+
+Both document types go through one pipeline. Handling them mixed, as they actually arrive, is the point: a yard photographs the day's paper in one go and does not sort it first.
 
 **Mocked, for product context only (clearly labeled "demo data" in the UI):**
 
 | Area | Status | Why |
 |---|---|---|
-| Detail-sheet digitization (capture, review, commit) | **Real** | The harness |
+| Digitizing both document types (capture, classify, extract, review, commit) | **Real** | The harness |
 | Material & unit configuration screen | **Real** | Required by normalization |
-| Inventory and monthly cash reports | **Real** (computed from committed sheets) | Proves the output is usable |
-| Dashboard, suppliers, sales, scale service, cash boxes, discounts | **Mock** | Shows where the harness fits in the future product |
+| Report of material in and money out, from committed documents | **Real** | Proves the output is usable |
+| Dashboard, suppliers, sales, scale service, cash boxes | **Mock** | Shows where the harness fits in the future product |
 | Live scale integration (RS-232 / Ethernet) | **Out of scope** | Belongs to the main product, not this challenge |
 | Other document types (notebooks, printed invoices, Excel import) | **Out of scope, listed as next steps** | Depth over breadth |
 | Auth, multi-tenant, deployment | **Out of scope** | Not the interesting part |
@@ -94,32 +97,37 @@ photo ──► preprocess ──► extract (vision LLM, structured output)
 ```
 
 ### 4.1 Extraction
-- One vision-LLM call per sheet returns a **strict schema** (structured outputs) with:
-  - **Header:** the weighing date (written on every sheet by the weigher — it is what all reporting is keyed on), supplier, plate, and truck gross/tare/net when present.
-  - **Lines:** material, gross weight, unit, deduction and its reason, net, and price if present.
+- One vision call per document returns a **strict schema** (structured outputs). The model's first job is to say *which document it is looking at* — the schema is a discriminated union, and misclassifying is its own failure mode in the evals, separate from misreading a number.
+  - **Tarjeta:** card number, date, one line per material (quantity, material as written, unit price, amount), the total, and the settlement.
+  - **Comprobante:** receipt number, date, the material of the load, the weighing block (E, S, N, deductions and their reasons, final weight), the total, and the settlement.
+  - **Settlement, on both:** what the load came to, what was actually paid and how ("efect", "Abono", "Transf."), and what is still owed ("Debo 596,25"). Recording only the purchase total would leave the cash report wrong twice: on the day of the purchase and on the day the debt is cleared.
+- **Crossed-out values are routine, not exceptional.** The weigher writes a figure, spots the error and writes the correct one above it. Every number field therefore carries `replaces`: the current reading is what counts, and the struck one is kept as evidence — a model that reads the wrong one of the two is a bug the evals must catch.
 - Every numeric field carries two values: `raw` (exactly what is written) and `value` (the parsed number). It also carries a per-field `legible` flag. The prompt instructs the model to mark unreadable fields instead of inferring them.
 - **No fixed layout.** Yards do not use a printed form: the weigher writes free-form on blank paper — a line for the date, supplier and plate, the truck weights, then one line per material with whatever spacing and abbreviations come naturally, sometimes with a price, sometimes not. So extraction cannot lean on column positions, which rules out template-based OCR and is a large part of why a vision model earns its place here. The evaluation sheets are written that way on purpose.
 
 ### 4.2 Normalization (code, not the model)
 - **Units:** kg, lb, quintal (1 qq = 100 lb = 45.359 kg), and t, all converted to kg internally. The original unit is kept.
 - **Materials:** the raw name is mapped to the catalog in three steps: exact alias, then a fuzzy match, which is only a *suggestion* and is always flagged, then unknown, which is flagged.
-- **Configuration screen:** the material catalog with aliases, and per material the **purchase price and the unit it is priced in** — USD 1.00 per pound, USD 0.20 per kilo, and so on. Price unit and weighing unit are independent: a sheet may record pounds for a material priced per kilo, and the conversion is the code's job. A single weight tolerance, default 10 %, editable in settings.
-- **Which price wins.** The price written on the sheet always wins; the configured price is used when the sheet leaves it blank. When both exist and differ by more than a configurable margin, the line is flagged — that is usually either a misread digit or a negotiated price worth noticing, and both deserve a human.
-- **Starting catalog:** chatarra liviana, chatarra pesada, chatarra automotriz, papel, cartón, cobre, hierro, plástico, vidrio.
+- **Prices are a band, not a value.** They are negotiated per load — in the sample the same chatarra settled at 0,23, 0,25 and 0,26. So the catalog carries the usual price *and the range the yard actually trades in*, and only a price outside that range is flagged. A fixed price would flag half the honest lines.
+- **Configuration screen:** the material catalog with its aliases, the unit and price band per material, the cash-rounding step, the band for truck-load prices, and photo retention.
+- **Starting catalog, taken from the real paperwork:** PET, perfil, chatarra gruesa, chatarra, cobre, bronce, radiador, aro, fundido, soplado, cartón, papel mixto, vidrio, plástico.
 
 ### 4.3 Validation (code)
 
-| # | Check | Severity |
-|---|---|---|
-| V1 | Line: `gross − deduction = net` | Blocking |
-| V2 | Truck: `gross − tare = net` | Blocking |
-| V3 | Σ line nets vs. truck net, within configured tolerance (default **10 %**) | Blocking above tolerance |
-| V4 | Line amount = net × price (sheet price, else configured price, converted to the price unit); sheet total = Σ amounts | Blocking |
-| V5 | Material resolved to catalog | Blocking if unknown |
-| V6 | Unit recognized and plausible for the material | Warning |
-| V7 | Plausibility: weight ranges per material, date not in the future or too old | Warning |
-| V8 | Possible duplicate (same date + supplier + plate + total) | Warning |
-| V9 | Any field marked illegible | Blocking |
+| # | Check | Applies to | Severity |
+|---|---|---|---|
+| V1 | Line: `amount = trunc₅(quantity × price)` | tarjeta | Blocking |
+| V2 | Truck: `entero − solo camión = neto` | comprobante | Blocking |
+| V3 | Truck: `neto − deductions = weight paid for` | comprobante | Blocking |
+| V4 | `total = Σ line amounts` | tarjeta | Blocking |
+| V5 | Material resolved to the catalog | both | Blocking if unknown, warning if fuzzy |
+| V6 | Settlement balances: `total − paid = owed` | both | Blocking |
+| V7 | Plausibility: date readable and not in the future, weights positive | both | Blocking / warning |
+| V8 | Duplicate folio — the number is pre-printed and never repeats | both | Warning |
+| V9 | Any field marked illegible, or a missing total | both | Blocking |
+| PRECIO | Price outside the band this material trades in; on a comprobante, the price *implied* by total ÷ weight | both | Warning |
+
+Two of these exist only because the real paperwork taught us they had to. **V6** caught that the yard rarely pays the whole amount at once — "850,15 − 500 efect = 350", "Debo 596,25" — so a purchase and a payment are different events. And the settlement check needed a wider tolerance than the line checks, because cash changes hands in whole dollars: that same 350,15 balance was settled as a round 350.
 
 ### 4.4 Handling failure: don't let the model "fix" the math
 A naive retry ("the sums don't match, try again") invites the model to **invent numbers that pass the check**, which is the worst possible failure mode. Instead:
@@ -207,24 +215,28 @@ Storage sits behind a two-method interface (`save`, `url`) with a local-disk imp
 The challenge submission does not need to be deployed — a recorded demo is explicitly acceptable.
 
 ### 4.7 Data model (minimal, shared with the future product)
-`Sheet` (photo, status, raw extraction, audit log) → `WeighingEvent` (weighing date, supplier, plate, truck weights) → `Line` (material, raw and normalized weights, deduction and reason, price, amount) plus `Material` (name, aliases, purchase price, price unit), `Correction` (who, when, from → to) and `Config` (tolerance, currency, photo retention).
+`Sheet` (photo, status, the raw extraction stored verbatim, flags, audit log) → `WeighingEvent` (document kind, folio, date, counterparty, and the truck weights when it is a comprobante) → `Line` (material as written, resolved material, quantity, unit, price, amount) plus `Material` (name, aliases, unit, price and price band), `Correction` (who, when, from → to), and `Config` (cash rounding, bulk price band, currency, photo retention).
+
+The raw extraction is kept immutably next to the corrected values. That pairing is what tells us later how the harness is doing on real paper, and it is also what makes the audit trail worth anything: a yard can see exactly what the machine read and exactly what a person changed.
 
 ## 5. Quality: how we know it works
 
-**Eval set.**
-- 16 sheets handwritten by us in the style of the yard, then photographed under realistic conditions (angles, shadows, yellow light, creased paper).
-- **Eight clean, eight with a seeded problem** — a wrong amount, a detail total outside tolerance, a price that diverges from the catalog, an unknown material, an illegible field, a truck subtraction that does not add up, a deduction that does not add up, and a duplicate. The half-and-half split is deliberate: with only broken sheets you measure detection and never see the false alarms on good sheets, which is what would make the system unbearable for the person reviewing.
-- Each sheet has a hand-written ground-truth JSON.
-- **Committed to the repo** — photos and ground truth both, so the evaluation reproduces. They are synthetic sheets we wrote ourselves; no real yard's data is involved.
-- Real sheets from the partner yard will be added when available and reported separately.
+**Eval set — 27 real documents.** Photographed at the yard with a phone: tarjetas and comprobantes mixed, at angles, under shadow and yellow light, on a cluttered table, some creased. A week of one yard's paper. Roughly a third contain something worth flagging — a corrected total, a debt that does not balance, a scribble — which is the natural rate, not a curated one.
+
+We considered writing a synthetic set instead and ran one early on. Real paper is better in a way that is hard to fake: the crossed-out totals, the three pen colours, the "Debo" in the margin, the rounding-down habit. Every one of those changed the design, and none of them would have occurred to us.
+
+**Privacy.** The company logo and every person's name are masked in the published copies; the anonymisation script and the regions it masks are in the workshop folder, so the redaction is auditable. Weights, prices, totals and annotations are untouched — those are what the harness is judged on. The unmasked originals never leave the workshop folder.
+
+**Ground truth** is transcribed by hand from the photos, reviewed by someone who knows the yard, and disagreements are resolved by looking at the paper. That review matters: a ground truth with a wrong digit in it makes every metric downstream a lie.
 
 **Metrics.**
 - **Silent error rate (headline):** fields committed with a wrong value *and no flag*. This is what costs the yard money.
-- Field accuracy for weights and prices (exact match after normalization).
+- **Document type accuracy:** a comprobante read as a tarjeta is wrong before any number is read.
+- Field accuracy for quantities, prices and totals.
 - Material mapping accuracy.
-- Seeded-error recall: how many planted problems were flagged.
-- False-flag rate: review burden on clean sheets.
-- Cost and latency per sheet.
+- **Correction handling:** on documents with a struck-through value, how often the current reading is taken rather than the superseded one.
+- Flag recall on documents that genuinely have a problem, and false-flag rate on the ones that do not.
+- Cost and latency per document.
 
 **Loop.** An eval script runs the full pipeline on the set and prints a report, so every prompt, model, or validation change is measured, not guessed.
 
@@ -245,10 +257,11 @@ The challenge submission does not need to be deployed — a recorded demo is exp
 **Deliberately not done:** agents or tool loops (the workflow is fixed), fine-tuning, and automatic correction of totals.
 
 ## 7. Open questions
-- What the real detail sheet looks like: fields, and whether prices are written on it. *(Waiting on partner yard.)*
-- The yard's material list and local names.
-- **Settled for now:** a single configurable tolerance (10 % default) rather than one per material; photos retained for 90 days after commit, then deleted while the extraction JSON is kept; the evaluation set is written by hand by us rather than waiting on the partner yard.
-- Whether tolerance should later vary per material (wet cardboard behaves nothing like metal) stays open until real sheets say otherwise.
+- **Units.** The paper does not say, and the yard has never needed it written down. Configured per material for now; worth confirming before anyone trusts a weight report.
+- **What the annotations mean.** "Debo" reads as a balance carried to the supplier and the arithmetic supports it, but it is inference from 27 documents, not something the owner has confirmed. Same for "Abono" and "Transf.".
+- **The settlement tolerance of one dollar** comes from a single observation. It should be confirmed rather than hardened into a rule.
+- **Do the two document types ever refer to the same purchase?** They appear to be separate flows — carts on the small scale, trucks on the big one — which is what the design assumes.
+- **Settled:** photos kept 90 days after commit, then deleted while the extraction is kept; prices validated as a band rather than a value; amounts truncated down to five cents.
 
 ## 8. Reflections *(to be completed at submission)*
 - Time spent:

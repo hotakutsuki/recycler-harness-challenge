@@ -1,90 +1,151 @@
 import { z } from "zod";
 
 /**
- * The single source of truth for the shape of an extracted weighing sheet.
+ * The shape of what the model reads off a document.
  *
- * This schema is used three ways, and that is the point of keeping it here:
- *   - converted to JSON Schema, it is the output contract sent to the model
- *   - `Sheet.parse(json)` validates what comes back at runtime
- *   - `z.infer` gives the UI its types
+ * Used three ways, which is why it lives here alone: converted to JSON Schema it
+ * is the model's output contract, `Document.parse()` validates the response at
+ * runtime, and `z.infer` gives the UI its types.
  *
- * Nothing in this file imports Next.js, the database, or the Anthropic SDK.
+ * The yard keeps two kinds of paper, and they are genuinely different documents:
+ *
+ *   tarjeta      A numbered green card the weigher fills in for walk-in suppliers
+ *                — handcart and small loads, weighed on the small scale. One line
+ *                per material: quantity, unit price, amount. Free-form, no grid.
+ *
+ *   comprobante  A pre-printed receipt for truck loads. The truck is weighed full
+ *                (E, entero), then empty (S, solo camión); the difference is the
+ *                net (N). Deductions come off that, and a single total is paid for
+ *                the whole load — the unit price is never written down.
+ *
+ * Both end the same way for the business: material came in, money went out, and
+ * sometimes part of the money is still owed.
  */
 
-/** Units that appear on the sheets. 1 qq = 100 lb; conversion lives in normalize.ts. */
 export const Unit = z.enum(["kg", "lb", "qq", "t"]);
 export type Unit = z.infer<typeof Unit>;
 
 /**
- * Every number the model reads is reported twice.
+ * Every number the model reads is reported twice: `raw` is the ink exactly as
+ * written ("1.250", "76,40"), `value` is that text parsed.
  *
- * `raw` is the ink: "1.250", "1250", "1,250" — whatever is physically on the paper.
- * `value` is that text parsed into a number.
+ * `legible: false` means it could not be read, and then `value` must be null —
+ * guessing is a failure, not a fallback.
  *
- * Keeping both lets the review screen show the clerk what was written next to the
- * photo, and lets the evals tell a misread digit apart from a misparsed thousands
- * separator. `legible: false` means the model could not read it — `value` must then
- * be null. Guessing is a failure, not a fallback.
+ * `replaces` carries a crossed-out value when one is visible. On these documents
+ * a struck-through total is normal, not exceptional: the weigher writes a figure,
+ * spots the mistake and writes the right one above it. The reading that counts is
+ * the current one; the struck one is kept because it is evidence of a correction,
+ * and because a model that silently reads the wrong one of the two is a bug we
+ * want the evals to catch.
  */
 export const NumberField = z.object({
   raw: z.string(),
   value: z.number().nullable(),
   legible: z.boolean(),
+  replaces: z.string().nullable(),
 });
 export type NumberField = z.infer<typeof NumberField>;
 
-/** The truck scale: gross − tare = net. Absent on sheets for walk-in deliveries. */
-export const TruckWeights = z.object({
-  gross: NumberField.nullable(),
-  tare: NumberField.nullable(),
-  net: NumberField.nullable(),
-  unit: Unit.nullable(),
-});
+/** How the payment was settled. Written in the margin: "efect", "Abono", "Transf.", "Debo". */
+export const PaymentKind = z.enum(["efectivo", "abono", "transferencia", "debe", "otro"]);
 
-export const SheetHeader = z.object({
-  /** The weighing date, as written: "02/03/2026", "15-03-2026", "2 mar 26". */
-  date_raw: z.string().nullable(),
-  /** ISO date, only when the written date is unambiguous; otherwise null and flagged. */
-  date_iso: z.string().nullable(),
-  supplier: z.string().nullable(),
-  plate: z.string().nullable(),
-  weigher: z.string().nullable(),
-  /** The pre-printed folio number, which links a sheet to its ground truth. */
-  folio: z.string().nullable(),
-  truck: TruckWeights.nullable(),
-});
-
-export const SheetLine = z.object({
-  /** Row number as printed on the form, 1-based. */
-  index: z.number().int().positive(),
-  /** The material exactly as written — "chat. liv.", not "chatarra liviana". */
-  material_raw: z.string(),
-  gross: NumberField.nullable(),
-  unit: Unit.nullable(),
-  /** Weight discounted for material that is not what is being bought. */
-  deduction: NumberField.nullable(),
-  /** Why the deduction was taken: "agarraderas plást.", "radiador c/ plástico". */
-  deduction_reason: z.string().nullable(),
-  net: NumberField.nullable(),
-  /** Unit price written on the sheet, when the sheet has price columns. */
-  price: NumberField.nullable(),
+export const Payment = z.object({
+  kind: PaymentKind,
   amount: NumberField.nullable(),
+  /** The words as written, so a reviewer can see what the classification came from. */
+  raw: z.string(),
 });
 
-export const Sheet = z.object({
-  header: SheetHeader,
-  lines: z.array(SheetLine),
-  /** Totals written at the foot of the sheet. Often left blank — that is not an error. */
-  total_net: NumberField.nullable(),
-  total_amount: NumberField.nullable(),
+/**
+ * What was settled at the counter. The yard rarely pays the whole amount in cash
+ * on the spot: part is paid, the rest is carried as a debt to the supplier, and a
+ * later visit clears it. Recording only the purchase total would leave the cash
+ * report wrong on both days.
+ */
+export const Settlement = z.object({
+  /** The amount the load came to, before anything was paid. */
+  total: NumberField.nullable(),
+  payments: z.array(Payment),
+  /** The balance still owed, when the document states one ("Debo 596,25"). */
+  owed: NumberField.nullable(),
+});
+
+const CommonHeader = {
+  /** The date as written: "18/09/2026", "18/9/2026". */
+  date_raw: z.string().nullable(),
   /**
-   * Anything the model wants to say about the photo itself: glare, a torn corner,
-   * a crossed-out value. Never a judgement about whether the numbers are right —
-   * that is validate.ts's job, and asking the model for it invites invented fixes.
+   * The person the money went to. Blurred out in the published dataset, so the
+   * model is expected to return null for these documents — the field stays in the
+   * schema because a yard running this on its own paper needs it.
    */
+  counterparty: z.string().nullable(),
+};
+
+/** One material line on a tarjeta: "98 de Pet  0,78  76,40". */
+export const TarjetaLine = z.object({
+  index: z.number().int().positive(),
+  /** How much of it, in whatever unit that material is traded in at this yard. */
+  quantity: NumberField.nullable(),
+  /** Exactly as written — "Pet", "grues", "chat", "Radiador ALU". */
+  material_raw: z.string(),
+  unit_price: NumberField.nullable(),
+  amount: NumberField.nullable(),
+  /** Anything else on the line: a tag like "ALU", a scribble, a note. */
+  note: z.string().nullable(),
+});
+
+export const Tarjeta = z.object({
+  kind: z.literal("tarjeta"),
+  /** The pre-printed card number, top right: 2776, 2784. */
+  card_number: z.string().nullable(),
+  ...CommonHeader,
+  lines: z.array(TarjetaLine),
+  settlement: Settlement,
   notes: z.array(z.string()),
 });
 
-export type Sheet = z.infer<typeof Sheet>;
-export type SheetHeader = z.infer<typeof SheetHeader>;
-export type SheetLine = z.infer<typeof SheetLine>;
+/** The weighing block of a comprobante: E − S = N, then deductions. */
+export const TruckWeighing = z.object({
+  /** "entero": the truck with the load. */
+  gross: NumberField.nullable(),
+  /** "solo camión": the truck empty. */
+  tare: NumberField.nullable(),
+  /** "neto": what the yard is buying. */
+  net: NumberField.nullable(),
+  unit: Unit.nullable(),
+  /** Written as "− 80   2 tanques filtros": weight discounted, and why. */
+  deductions: z.array(
+    z.object({ amount: NumberField.nullable(), reason: z.string().nullable() }),
+  ),
+  /** The weight left after the deductions, when the sheet states it. */
+  final_net: NumberField.nullable(),
+});
+
+export const Comprobante = z.object({
+  kind: z.literal("comprobante"),
+  /** Pre-printed in red, top right: 015641. */
+  receipt_number: z.string().nullable(),
+  ...CommonHeader,
+  /** The material box at the top: "Chatarra". A whole load, one material. */
+  material_raw: z.string().nullable(),
+  plate: z.string().nullable(),
+  observations: z.string().nullable(),
+  weighing: TruckWeighing,
+  settlement: Settlement,
+  notes: z.array(z.string()),
+});
+
+/**
+ * One document, either kind. The model decides which it is looking at — that is
+ * the first thing the harness asks of it, and getting it wrong is its own failure
+ * mode in the evals, separate from misreading a number.
+ */
+export const Document = z.discriminatedUnion("kind", [Tarjeta, Comprobante]);
+
+export type Document = z.infer<typeof Document>;
+export type Tarjeta = z.infer<typeof Tarjeta>;
+export type Comprobante = z.infer<typeof Comprobante>;
+export type TarjetaLine = z.infer<typeof TarjetaLine>;
+export type Settlement = z.infer<typeof Settlement>;
+export type Payment = z.infer<typeof Payment>;

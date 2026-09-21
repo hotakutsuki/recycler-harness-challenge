@@ -2,9 +2,9 @@ import { PrismaClient } from "@prisma/client";
 import { DEFAULT_CATALOG, DEFAULT_CONFIG } from "../harness/catalog";
 
 /**
- * Seeds the catalog a yard starts from. It is a starting point, not a fixture:
- * the configuration screen is where a yard makes it theirs, and most will rename
- * things within the first hour.
+ * Seeds the catalog a yard starts from — the materials and prices read off the
+ * real paperwork. A starting point, not a fixture: the configuration screen is
+ * where a yard makes it theirs, and most will change something within the hour.
  */
 const db = new PrismaClient();
 
@@ -14,8 +14,9 @@ async function main() {
     update: {},
     create: {
       id: 1,
-      tolerancePct: DEFAULT_CONFIG.tolerancePct,
-      priceDivergencePct: DEFAULT_CONFIG.priceDivergencePct,
+      cashRounding: DEFAULT_CONFIG.cashRounding,
+      bulkPriceMin: DEFAULT_CONFIG.bulkPriceRange.min,
+      bulkPriceMax: DEFAULT_CONFIG.bulkPriceRange.max,
       currency: DEFAULT_CONFIG.currency,
       photoRetentionDays: DEFAULT_CONFIG.photoRetentionDays,
     },
@@ -29,7 +30,9 @@ async function main() {
         id: material.id,
         name: material.name,
         price: material.price,
-        priceUnit: material.priceUnit,
+        unit: material.unit,
+        priceMin: material.priceRange.min,
+        priceMax: material.priceRange.max,
         position,
         aliases: { create: material.aliases.map((text) => ({ text })) },
       },

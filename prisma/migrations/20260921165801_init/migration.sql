@@ -48,8 +48,10 @@ CREATE TABLE "Line" (
 CREATE TABLE "Material" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "name" TEXT NOT NULL,
-    "priceUnit" TEXT NOT NULL,
+    "unit" TEXT NOT NULL,
     "price" REAL NOT NULL,
+    "priceMin" REAL NOT NULL,
+    "priceMax" REAL NOT NULL,
     "active" BOOLEAN NOT NULL DEFAULT true,
     "position" INTEGER NOT NULL DEFAULT 0
 );
@@ -77,8 +79,9 @@ CREATE TABLE "Correction" (
 -- CreateTable
 CREATE TABLE "Config" (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT DEFAULT 1,
-    "tolerancePct" REAL NOT NULL DEFAULT 10,
-    "priceDivergencePct" REAL NOT NULL DEFAULT 10,
+    "cashRounding" REAL NOT NULL DEFAULT 0.05,
+    "bulkPriceMin" REAL NOT NULL DEFAULT 0.12,
+    "bulkPriceMax" REAL NOT NULL DEFAULT 0.45,
     "currency" TEXT NOT NULL DEFAULT 'USD',
     "photoRetentionDays" INTEGER NOT NULL DEFAULT 90,
     "language" TEXT NOT NULL DEFAULT 'es'

@@ -16,6 +16,9 @@ import type { Flag } from "./validate";
 export function messageKey(flag: Flag): string {
   if (flag.code === "V5" && flag.severity === "warning") return "flag.V5.fuzzy";
   if (flag.code === "V7" && flag.params.field === "date") return "flag.V7.date";
+  if (flag.code === "V9" && flag.params.field === "total") return "flag.V9.total";
+  if (flag.code === "V9" && flag.params.field === "weights") return "flag.V9.weights";
+  if (flag.code === "V6" && flag.severity === "warning") return "flag.V6.overpaid";
   return `flag.${flag.code}`;
 }
 
