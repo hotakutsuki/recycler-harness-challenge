@@ -1,0 +1,65 @@
+{
+  "id": "doc-21",
+  "photo": "fotos/doc-21.jpeg",
+  "kind": "comprobante",
+  "folio": "015646",
+  "duplicate_of": null,
+  "uncertain": [
+    "Junto al total hay un «−40» pequeño. 202,80 − 40 = 162,80, que es lo transferido."
+  ],
+  "reviewed_by_human": false,
+  "extraction": {
+    "kind": "comprobante",
+    "receipt_number": "015646",
+    "date_raw": "18/9/2026",
+    "counterparty": null,
+    "material_raw": "Chatarra",
+    "plate": null,
+    "observations": null,
+    "weighing": {
+      "gross": {
+        "raw": "2770",
+        "value": 2770,
+        "legible": true,
+        "replaces": null
+      },
+      "tare": {
+        "raw": "1990",
+        "value": 1990,
+        "legible": true,
+        "replaces": null
+      },
+      "net": {
+        "raw": "780",
+        "value": 780,
+        "legible": true,
+        "replaces": null
+      },
+      "unit": null,
+      "deductions": [],
+      "final_net": null
+    },
+    "settlement": {
+      "total": {
+        "raw": "202,80",
+        "value": 202.8,
+        "legible": true,
+        "replaces": "(ilegible)"
+      },
+      "payments": [
+        {
+          "kind": "transferencia",
+          "amount": {
+            "raw": "162,80",
+            "value": 162.8,
+            "legible": true,
+            "replaces": null
+          },
+          "raw": "162,80 Transf."
+        }
+      ],
+      "owed": null
+    },
+    "notes": []
+  }
+}

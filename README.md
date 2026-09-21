@@ -38,6 +38,8 @@ npm run dev              # http://localhost:3000
 No Docker needed. A `docker compose up` path exists for a production-like check, with
 `./data` mounted from the host — the same image that would be deployed.
 
+There is no hosted demo and no demo video: this repository is the whole delivery.
+
 | Command | |
 |---|---|
 | `npm run dev` | the app |

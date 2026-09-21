@@ -1,0 +1,120 @@
+{
+  "id": "doc-12",
+  "photo": "fotos/doc-12.jpeg",
+  "kind": "tarjeta",
+  "folio": "2777",
+  "duplicate_of": null,
+  "uncertain": [],
+  "reviewed_by_human": false,
+  "extraction": {
+    "kind": "tarjeta",
+    "card_number": "2777",
+    "date_raw": "18/09/2026",
+    "counterparty": null,
+    "lines": [
+      {
+        "index": 1,
+        "quantity": {
+          "raw": "83,5",
+          "value": 83.5,
+          "legible": true,
+          "replaces": null
+        },
+        "material_raw": "Pet",
+        "unit_price": {
+          "raw": "0,78",
+          "value": 0.78,
+          "legible": true,
+          "replaces": null
+        },
+        "amount": {
+          "raw": "65,10",
+          "value": 65.1,
+          "legible": true,
+          "replaces": null
+        },
+        "note": "hay una cantidad tachada en rojo antes del 83,5"
+      },
+      {
+        "index": 2,
+        "quantity": {
+          "raw": "391",
+          "value": 391,
+          "legible": true,
+          "replaces": null
+        },
+        "material_raw": "fundido",
+        "unit_price": {
+          "raw": "0,15",
+          "value": 0.15,
+          "legible": true,
+          "replaces": null
+        },
+        "amount": {
+          "raw": "58,65",
+          "value": 58.65,
+          "legible": true,
+          "replaces": null
+        },
+        "note": null
+      },
+      {
+        "index": 3,
+        "quantity": {
+          "raw": "174,5",
+          "value": 174.5,
+          "legible": true,
+          "replaces": null
+        },
+        "material_raw": "ARO",
+        "unit_price": {
+          "raw": "1,20",
+          "value": 1.2,
+          "legible": true,
+          "replaces": null
+        },
+        "amount": {
+          "raw": "209,40",
+          "value": 209.4,
+          "legible": true,
+          "replaces": null
+        },
+        "note": null
+      },
+      {
+        "index": 4,
+        "quantity": {
+          "raw": "55",
+          "value": 55,
+          "legible": true,
+          "replaces": null
+        },
+        "material_raw": "Radiador",
+        "unit_price": {
+          "raw": "0,90",
+          "value": 0.9,
+          "legible": true,
+          "replaces": null
+        },
+        "amount": {
+          "raw": "49,50",
+          "value": 49.5,
+          "legible": true,
+          "replaces": null
+        },
+        "note": null
+      }
+    ],
+    "settlement": {
+      "total": {
+        "raw": "382,65",
+        "value": 382.65,
+        "legible": true,
+        "replaces": null
+      },
+      "payments": [],
+      "owed": null
+    },
+    "notes": []
+  }
+}

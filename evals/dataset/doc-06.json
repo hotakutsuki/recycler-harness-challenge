@@ -1,0 +1,113 @@
+{
+  "id": "doc-06",
+  "photo": "fotos/doc-06.jpeg",
+  "kind": "tarjeta",
+  "folio": "2781",
+  "duplicate_of": null,
+  "uncertain": [],
+  "reviewed_by_human": false,
+  "extraction": {
+    "kind": "tarjeta",
+    "card_number": "2781",
+    "date_raw": "18/09/2026",
+    "counterparty": null,
+    "lines": [
+      {
+        "index": 1,
+        "quantity": {
+          "raw": "93",
+          "value": 93,
+          "legible": true,
+          "replaces": null
+        },
+        "material_raw": "Radiador ALU",
+        "unit_price": {
+          "raw": "0,85",
+          "value": 0.85,
+          "legible": true,
+          "replaces": null
+        },
+        "amount": {
+          "raw": "79,05",
+          "value": 79.05,
+          "legible": true,
+          "replaces": null
+        },
+        "note": null
+      },
+      {
+        "index": 2,
+        "quantity": {
+          "raw": "51",
+          "value": 51,
+          "legible": true,
+          "replaces": null
+        },
+        "material_raw": "cobre",
+        "unit_price": {
+          "raw": "6,10",
+          "value": 6.1,
+          "legible": true,
+          "replaces": null
+        },
+        "amount": {
+          "raw": "311,10",
+          "value": 311.1,
+          "legible": true,
+          "replaces": null
+        },
+        "note": null
+      },
+      {
+        "index": 3,
+        "quantity": {
+          "raw": "115",
+          "value": 115,
+          "legible": true,
+          "replaces": null
+        },
+        "material_raw": "bronce",
+        "unit_price": {
+          "raw": "4,00",
+          "value": 4,
+          "legible": true,
+          "replaces": null
+        },
+        "amount": {
+          "raw": "460",
+          "value": 460,
+          "legible": true,
+          "replaces": null
+        },
+        "note": "precio corregido sobre un 3,00 tachado"
+      }
+    ],
+    "settlement": {
+      "total": {
+        "raw": "850,15",
+        "value": 850.15,
+        "legible": true,
+        "replaces": "830,65"
+      },
+      "payments": [
+        {
+          "kind": "efectivo",
+          "amount": {
+            "raw": "500",
+            "value": 500,
+            "legible": true,
+            "replaces": null
+          },
+          "raw": "-500 efect"
+        }
+      ],
+      "owed": {
+        "raw": "350",
+        "value": 350,
+        "legible": true,
+        "replaces": null
+      }
+    },
+    "notes": []
+  }
+}

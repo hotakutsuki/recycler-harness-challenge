@@ -1,0 +1,54 @@
+{
+  "id": "doc-20",
+  "photo": "fotos/doc-20.jpeg",
+  "kind": "comprobante",
+  "folio": "015643",
+  "duplicate_of": null,
+  "uncertain": [
+    "En la columna Kg hay un «50» suelto."
+  ],
+  "reviewed_by_human": false,
+  "extraction": {
+    "kind": "comprobante",
+    "receipt_number": "015643",
+    "date_raw": "19/09/2026",
+    "counterparty": null,
+    "material_raw": "Chatarra",
+    "plate": null,
+    "observations": null,
+    "weighing": {
+      "gross": {
+        "raw": "1760",
+        "value": 1760,
+        "legible": true,
+        "replaces": null
+      },
+      "tare": {
+        "raw": "1580",
+        "value": 1580,
+        "legible": true,
+        "replaces": null
+      },
+      "net": {
+        "raw": "180",
+        "value": 180,
+        "legible": true,
+        "replaces": null
+      },
+      "unit": null,
+      "deductions": [],
+      "final_net": null
+    },
+    "settlement": {
+      "total": {
+        "raw": "41,40",
+        "value": 41.4,
+        "legible": true,
+        "replaces": "(ilegible)"
+      },
+      "payments": [],
+      "owed": null
+    },
+    "notes": []
+  }
+}

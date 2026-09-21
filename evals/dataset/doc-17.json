@@ -1,0 +1,66 @@
+{
+  "id": "doc-17",
+  "photo": "fotos/doc-17.jpeg",
+  "kind": "tarjeta",
+  "folio": "2782",
+  "duplicate_of": null,
+  "uncertain": [
+    "Los números azules son importes, no precios unitarios: 0,05 + 0,05 = 0,10."
+  ],
+  "reviewed_by_human": false,
+  "extraction": {
+    "kind": "tarjeta",
+    "card_number": "2782",
+    "date_raw": "18/09/2026",
+    "counterparty": null,
+    "lines": [
+      {
+        "index": 1,
+        "quantity": {
+          "raw": "0,5",
+          "value": 0.5,
+          "legible": true,
+          "replaces": null
+        },
+        "material_raw": "soplado",
+        "unit_price": null,
+        "amount": {
+          "raw": "0,05",
+          "value": 0.05,
+          "legible": true,
+          "replaces": null
+        },
+        "note": null
+      },
+      {
+        "index": 2,
+        "quantity": {
+          "raw": "0,5",
+          "value": 0.5,
+          "legible": true,
+          "replaces": null
+        },
+        "material_raw": "carton",
+        "unit_price": null,
+        "amount": {
+          "raw": "0,05",
+          "value": 0.05,
+          "legible": true,
+          "replaces": null
+        },
+        "note": null
+      }
+    ],
+    "settlement": {
+      "total": {
+        "raw": "0,10",
+        "value": 0.1,
+        "legible": true,
+        "replaces": null
+      },
+      "payments": [],
+      "owed": null
+    },
+    "notes": []
+  }
+}

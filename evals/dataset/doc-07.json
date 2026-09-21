@@ -1,0 +1,43 @@
+{
+  "id": "doc-07",
+  "photo": "fotos/doc-07.jpeg",
+  "kind": "tarjeta",
+  "folio": "2776",
+  "duplicate_of": null,
+  "uncertain": [
+    "No hay precio unitario escrito; 35,25 ÷ 47 da 0,75."
+  ],
+  "reviewed_by_human": false,
+  "extraction": {
+    "kind": "tarjeta",
+    "card_number": "2776",
+    "date_raw": "18/09/2026",
+    "counterparty": null,
+    "lines": [
+      {
+        "index": 1,
+        "quantity": {
+          "raw": "47",
+          "value": 47,
+          "legible": true,
+          "replaces": null
+        },
+        "material_raw": "ARO",
+        "unit_price": null,
+        "amount": {
+          "raw": "35,25",
+          "value": 35.25,
+          "legible": true,
+          "replaces": null
+        },
+        "note": null
+      }
+    ],
+    "settlement": {
+      "total": null,
+      "payments": [],
+      "owed": null
+    },
+    "notes": []
+  }
+}

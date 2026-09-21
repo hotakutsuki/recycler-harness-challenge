@@ -1,0 +1,69 @@
+{
+  "id": "doc-22",
+  "photo": "fotos/doc-22.jpeg",
+  "kind": "comprobante",
+  "folio": "015644",
+  "duplicate_of": null,
+  "uncertain": [
+    "El primer peso puede ser 6650 o 6950: hay un trazo encimado."
+  ],
+  "reviewed_by_human": false,
+  "extraction": {
+    "kind": "comprobante",
+    "receipt_number": "015644",
+    "date_raw": "18/9/2026",
+    "counterparty": null,
+    "material_raw": "Chatarra",
+    "plate": null,
+    "observations": null,
+    "weighing": {
+      "gross": {
+        "raw": "6650",
+        "value": 6650,
+        "legible": true,
+        "replaces": null
+      },
+      "tare": {
+        "raw": "4430",
+        "value": 4430,
+        "legible": true,
+        "replaces": null
+      },
+      "net": {
+        "raw": "2220",
+        "value": 2220,
+        "legible": true,
+        "replaces": null
+      },
+      "unit": null,
+      "deductions": [
+        {
+          "amount": {
+            "raw": "80",
+            "value": 80,
+            "legible": true,
+            "replaces": null
+          },
+          "reason": "2 tanques filtros"
+        }
+      ],
+      "final_net": {
+        "raw": "2140",
+        "value": 2140,
+        "legible": true,
+        "replaces": null
+      }
+    },
+    "settlement": {
+      "total": {
+        "raw": "556,40",
+        "value": 556.4,
+        "legible": true,
+        "replaces": "(ilegible)"
+      },
+      "payments": [],
+      "owed": null
+    },
+    "notes": []
+  }
+}

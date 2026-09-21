@@ -1,0 +1,70 @@
+{
+  "id": "doc-10",
+  "photo": "fotos/doc-10.jpeg",
+  "kind": "comprobante",
+  "folio": "015631",
+  "duplicate_of": null,
+  "uncertain": [
+    "El «−250» y el «262,20» están escritos fuera del cuadro. Leo que se descontaron 250 y quedaron 262,20 por pagar, pero podría ser al revés."
+  ],
+  "reviewed_by_human": false,
+  "extraction": {
+    "kind": "comprobante",
+    "receipt_number": "015631",
+    "date_raw": "18/9/2026",
+    "counterparty": null,
+    "material_raw": "Chatarra",
+    "plate": null,
+    "observations": null,
+    "weighing": {
+      "gross": {
+        "raw": "6010",
+        "value": 6010,
+        "legible": true,
+        "replaces": null
+      },
+      "tare": {
+        "raw": "4040",
+        "value": 4040,
+        "legible": true,
+        "replaces": null
+      },
+      "net": {
+        "raw": "1970",
+        "value": 1970,
+        "legible": true,
+        "replaces": null
+      },
+      "unit": null,
+      "deductions": [],
+      "final_net": null
+    },
+    "settlement": {
+      "total": {
+        "raw": "512,20",
+        "value": 512.2,
+        "legible": true,
+        "replaces": "(ilegible)"
+      },
+      "payments": [
+        {
+          "kind": "otro",
+          "amount": {
+            "raw": "250",
+            "value": 250,
+            "legible": true,
+            "replaces": null
+          },
+          "raw": "-250"
+        }
+      ],
+      "owed": {
+        "raw": "262,20",
+        "value": 262.2,
+        "legible": true,
+        "replaces": null
+      }
+    },
+    "notes": []
+  }
+}

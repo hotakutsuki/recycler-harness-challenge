@@ -189,7 +189,14 @@ export function validate(
 
   // ---- the document as a whole -------------------------------------------
   if (doc.settlement.total == null) {
-    add("V9", "blocking", { field: "total" });
+    if (doc.linesTotal != null) {
+      // A one-line tarjeta often carries no separate total: the line's amount is
+      // the total. Worth surfacing, since it is money, but not worth blocking —
+      // a check that stops honest paperwork teaches people to click through.
+      add("V4", "warning", { expected: round2(doc.linesTotal) });
+    } else {
+      add("V9", "blocking", { field: "total" });
+    }
   }
 
   if (doc.dateIso == null) {

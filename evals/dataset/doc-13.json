@@ -1,0 +1,56 @@
+{
+  "id": "doc-13",
+  "photo": "fotos/doc-13.jpeg",
+  "kind": "comprobante",
+  "folio": "015633",
+  "duplicate_of": null,
+  "uncertain": [
+    "El neto está tachado (parecía 40) y debajo dice «60 kg».",
+    "La salida se lee 1360 pero el trazo está encimado; 1420 − 1360 = 60, lo que cuadra con el valor corregido.",
+    "En la columna Kg hay un «20» suelto."
+  ],
+  "reviewed_by_human": false,
+  "extraction": {
+    "kind": "comprobante",
+    "receipt_number": "015633",
+    "date_raw": "18/9/2026",
+    "counterparty": null,
+    "material_raw": "Chatarra",
+    "plate": null,
+    "observations": null,
+    "weighing": {
+      "gross": {
+        "raw": "1420",
+        "value": 1420,
+        "legible": true,
+        "replaces": null
+      },
+      "tare": {
+        "raw": "1360",
+        "value": 1360,
+        "legible": true,
+        "replaces": null
+      },
+      "net": {
+        "raw": "60",
+        "value": 60,
+        "legible": true,
+        "replaces": null
+      },
+      "unit": "kg",
+      "deductions": [],
+      "final_net": null
+    },
+    "settlement": {
+      "total": {
+        "raw": "12,00",
+        "value": 12,
+        "legible": true,
+        "replaces": null
+      },
+      "payments": [],
+      "owed": null
+    },
+    "notes": []
+  }
+}

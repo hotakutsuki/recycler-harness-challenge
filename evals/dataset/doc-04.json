@@ -1,0 +1,44 @@
+{
+  "id": "doc-04",
+  "photo": "fotos/doc-04.jpeg",
+  "kind": "tarjeta",
+  "folio": "2780",
+  "duplicate_of": null,
+  "uncertain": [
+    "La cantidad está tachada en morado y debajo dice «3,5». Si fuera 3,5 el precio sería 0,50; si fuera 5, sería 0,35.",
+    "No hay total escrito aparte: el 1,75 es el único monto."
+  ],
+  "reviewed_by_human": false,
+  "extraction": {
+    "kind": "tarjeta",
+    "card_number": "2780",
+    "date_raw": "18/09/2026",
+    "counterparty": null,
+    "lines": [
+      {
+        "index": 1,
+        "quantity": {
+          "raw": "3,5",
+          "value": 3.5,
+          "legible": true,
+          "replaces": null
+        },
+        "material_raw": "Pet",
+        "unit_price": null,
+        "amount": {
+          "raw": "1,75",
+          "value": 1.75,
+          "legible": true,
+          "replaces": null
+        },
+        "note": null
+      }
+    ],
+    "settlement": {
+      "total": null,
+      "payments": [],
+      "owed": null
+    },
+    "notes": []
+  }
+}

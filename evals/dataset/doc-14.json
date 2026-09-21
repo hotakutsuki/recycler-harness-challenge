@@ -1,0 +1,191 @@
+{
+  "id": "doc-14",
+  "photo": "fotos/doc-14.jpeg",
+  "kind": "tarjeta",
+  "folio": "2778",
+  "duplicate_of": null,
+  "uncertain": [
+    "La tercera línea dice algo como «chatarra fina» o «chatarra flu»; no la leo bien."
+  ],
+  "reviewed_by_human": false,
+  "extraction": {
+    "kind": "tarjeta",
+    "card_number": "2778",
+    "date_raw": "18/9/2026",
+    "counterparty": null,
+    "lines": [
+      {
+        "index": 1,
+        "quantity": {
+          "raw": "17",
+          "value": 17,
+          "legible": true,
+          "replaces": null
+        },
+        "material_raw": "pet",
+        "unit_price": {
+          "raw": "0,55",
+          "value": 0.55,
+          "legible": true,
+          "replaces": null
+        },
+        "amount": {
+          "raw": "9,35",
+          "value": 9.35,
+          "legible": true,
+          "replaces": null
+        },
+        "note": null
+      },
+      {
+        "index": 2,
+        "quantity": {
+          "raw": "2",
+          "value": 2,
+          "legible": true,
+          "replaces": null
+        },
+        "material_raw": "soplado",
+        "unit_price": {
+          "raw": "0,10",
+          "value": 0.1,
+          "legible": true,
+          "replaces": null
+        },
+        "amount": {
+          "raw": "0,20",
+          "value": 0.2,
+          "legible": true,
+          "replaces": null
+        },
+        "note": null
+      },
+      {
+        "index": 3,
+        "quantity": {
+          "raw": "16,5",
+          "value": 16.5,
+          "legible": true,
+          "replaces": null
+        },
+        "material_raw": "chatarra fina",
+        "unit_price": {
+          "raw": "0,05",
+          "value": 0.05,
+          "legible": true,
+          "replaces": null
+        },
+        "amount": {
+          "raw": "0,80",
+          "value": 0.8,
+          "legible": true,
+          "replaces": null
+        },
+        "note": null
+      },
+      {
+        "index": 4,
+        "quantity": {
+          "raw": "56",
+          "value": 56,
+          "legible": true,
+          "replaces": null
+        },
+        "material_raw": "carton",
+        "unit_price": {
+          "raw": "0,10",
+          "value": 0.1,
+          "legible": true,
+          "replaces": null
+        },
+        "amount": {
+          "raw": "5,60",
+          "value": 5.6,
+          "legible": true,
+          "replaces": null
+        },
+        "note": null
+      },
+      {
+        "index": 5,
+        "quantity": {
+          "raw": "59",
+          "value": 59,
+          "legible": true,
+          "replaces": null
+        },
+        "material_raw": "chatarra",
+        "unit_price": {
+          "raw": "0,25",
+          "value": 0.25,
+          "legible": true,
+          "replaces": null
+        },
+        "amount": {
+          "raw": "14,75",
+          "value": 14.75,
+          "legible": true,
+          "replaces": null
+        },
+        "note": null
+      },
+      {
+        "index": 6,
+        "quantity": {
+          "raw": "9,5",
+          "value": 9.5,
+          "legible": true,
+          "replaces": null
+        },
+        "material_raw": "papel mixto",
+        "unit_price": {
+          "raw": "0,10",
+          "value": 0.1,
+          "legible": true,
+          "replaces": null
+        },
+        "amount": {
+          "raw": "0,95",
+          "value": 0.95,
+          "legible": true,
+          "replaces": null
+        },
+        "note": null
+      },
+      {
+        "index": 7,
+        "quantity": {
+          "raw": "2",
+          "value": 2,
+          "legible": true,
+          "replaces": null
+        },
+        "material_raw": "bronce",
+        "unit_price": {
+          "raw": "3,50",
+          "value": 3.5,
+          "legible": true,
+          "replaces": null
+        },
+        "amount": {
+          "raw": "7,00",
+          "value": 7,
+          "legible": true,
+          "replaces": null
+        },
+        "note": null
+      }
+    ],
+    "settlement": {
+      "total": {
+        "raw": "38,65",
+        "value": 38.65,
+        "legible": true,
+        "replaces": null
+      },
+      "payments": [],
+      "owed": null
+    },
+    "notes": []
+  }
+}

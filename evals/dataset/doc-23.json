@@ -1,0 +1,166 @@
+{
+  "id": "doc-23",
+  "photo": "fotos/doc-23.jpeg",
+  "kind": "tarjeta",
+  "folio": "2784",
+  "duplicate_of": null,
+  "uncertain": [],
+  "reviewed_by_human": false,
+  "extraction": {
+    "kind": "tarjeta",
+    "card_number": "2784",
+    "date_raw": "18/09/2026",
+    "counterparty": null,
+    "lines": [
+      {
+        "index": 1,
+        "quantity": {
+          "raw": "98",
+          "value": 98,
+          "legible": true,
+          "replaces": null
+        },
+        "material_raw": "Pet",
+        "unit_price": {
+          "raw": "0,78",
+          "value": 0.78,
+          "legible": true,
+          "replaces": null
+        },
+        "amount": {
+          "raw": "76,40",
+          "value": 76.4,
+          "legible": true,
+          "replaces": null
+        },
+        "note": null
+      },
+      {
+        "index": 2,
+        "quantity": {
+          "raw": "240",
+          "value": 240,
+          "legible": true,
+          "replaces": null
+        },
+        "material_raw": "Perfil",
+        "unit_price": {
+          "raw": "1,40",
+          "value": 1.4,
+          "legible": true,
+          "replaces": null
+        },
+        "amount": {
+          "raw": "336,00",
+          "value": 336,
+          "legible": true,
+          "replaces": null
+        },
+        "note": null
+      },
+      {
+        "index": 3,
+        "quantity": {
+          "raw": "131,5",
+          "value": 131.5,
+          "legible": true,
+          "replaces": null
+        },
+        "material_raw": "grues",
+        "unit_price": {
+          "raw": "1,15",
+          "value": 1.15,
+          "legible": true,
+          "replaces": null
+        },
+        "amount": {
+          "raw": "151,20",
+          "value": 151.2,
+          "legible": true,
+          "replaces": null
+        },
+        "note": "lleva «ALU» al lado y algo tachado en rojo"
+      },
+      {
+        "index": 4,
+        "quantity": {
+          "raw": "80",
+          "value": 80,
+          "legible": true,
+          "replaces": null
+        },
+        "material_raw": "cobre",
+        "unit_price": {
+          "raw": "6,20",
+          "value": 6.2,
+          "legible": true,
+          "replaces": null
+        },
+        "amount": {
+          "raw": "496,00",
+          "value": 496,
+          "legible": true,
+          "replaces": null
+        },
+        "note": null
+      },
+      {
+        "index": 5,
+        "quantity": {
+          "raw": "277,5",
+          "value": 277.5,
+          "legible": true,
+          "replaces": null
+        },
+        "material_raw": "fundido",
+        "unit_price": {
+          "raw": "0,15",
+          "value": 0.15,
+          "legible": true,
+          "replaces": null
+        },
+        "amount": {
+          "raw": "41,60",
+          "value": 41.6,
+          "legible": true,
+          "replaces": null
+        },
+        "note": null
+      },
+      {
+        "index": 6,
+        "quantity": {
+          "raw": "14",
+          "value": 14,
+          "legible": true,
+          "replaces": null
+        },
+        "material_raw": "Radiador ALU",
+        "unit_price": {
+          "raw": "0,90",
+          "value": 0.9,
+          "legible": true,
+          "replaces": null
+        },
+        "amount": {
+          "raw": "12,60",
+          "value": 12.6,
+          "legible": true,
+          "replaces": null
+        },
+        "note": null
+      }
+    ],
+    "settlement": {
+      "total": {
+        "raw": "1113,80",
+        "value": 1113.8,
+        "legible": true,
+        "replaces": null
+      },
+      "payments": [],
+      "owed": null
+    },
+    "notes": []
+  }
+}

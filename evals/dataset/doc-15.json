@@ -1,0 +1,71 @@
+{
+  "id": "doc-15",
+  "photo": "fotos/doc-15.jpeg",
+  "kind": "comprobante",
+  "folio": "015634",
+  "duplicate_of": null,
+  "uncertain": [
+    "Junto al total dice «Debo Tw» o «Debo Trw»; quizá «Transf.». El 1152,90 cuadra como total (4270 al 0,27)."
+  ],
+  "reviewed_by_human": false,
+  "extraction": {
+    "kind": "comprobante",
+    "receipt_number": "015634",
+    "date_raw": "18/09/2026",
+    "counterparty": null,
+    "material_raw": "Chatarra",
+    "plate": null,
+    "observations": null,
+    "weighing": {
+      "gross": {
+        "raw": "7880",
+        "value": 7880,
+        "legible": true,
+        "replaces": null
+      },
+      "tare": {
+        "raw": "3580",
+        "value": 3580,
+        "legible": true,
+        "replaces": null
+      },
+      "net": {
+        "raw": "4300",
+        "value": 4300,
+        "legible": true,
+        "replaces": null
+      },
+      "unit": null,
+      "deductions": [
+        {
+          "amount": {
+            "raw": "30",
+            "value": 30,
+            "legible": true,
+            "replaces": null
+          },
+          "reason": null
+        }
+      ],
+      "final_net": {
+        "raw": "4270",
+        "value": 4270,
+        "legible": true,
+        "replaces": null
+      }
+    },
+    "settlement": {
+      "total": {
+        "raw": "1152,90",
+        "value": 1152.9,
+        "legible": true,
+        "replaces": "(ilegible)"
+      },
+      "payments": [],
+      "owed": null
+    },
+    "notes": [
+      "Debo Tw"
+    ]
+  }
+}

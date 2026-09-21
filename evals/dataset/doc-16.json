@@ -1,0 +1,58 @@
+{
+  "id": "doc-16",
+  "photo": "fotos/doc-16.jpeg",
+  "kind": "comprobante",
+  "folio": "015640",
+  "duplicate_of": null,
+  "uncertain": [
+    "La nota bajo el detalle dice algo como «paga 4 servicio bo»; no la entiendo.",
+    "En la columna Kg hay un «100» suelto.",
+    "El año de la fecha queda tapado por un objeto en la foto."
+  ],
+  "reviewed_by_human": false,
+  "extraction": {
+    "kind": "comprobante",
+    "receipt_number": "015640",
+    "date_raw": "18/09/2026",
+    "counterparty": null,
+    "material_raw": "Chatarra",
+    "plate": null,
+    "observations": null,
+    "weighing": {
+      "gross": {
+        "raw": "4540",
+        "value": 4540,
+        "legible": true,
+        "replaces": null
+      },
+      "tare": {
+        "raw": "3100",
+        "value": 3100,
+        "legible": true,
+        "replaces": null
+      },
+      "net": {
+        "raw": "1440",
+        "value": 1440,
+        "legible": true,
+        "replaces": null
+      },
+      "unit": null,
+      "deductions": [],
+      "final_net": null
+    },
+    "settlement": {
+      "total": {
+        "raw": "374,40",
+        "value": 374.4,
+        "legible": true,
+        "replaces": "288,50"
+      },
+      "payments": [],
+      "owed": null
+    },
+    "notes": [
+      "paga 4 servicio"
+    ]
+  }
+}

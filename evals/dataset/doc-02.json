@@ -1,0 +1,45 @@
+{
+  "id": "doc-02",
+  "photo": "fotos/doc-02.jpeg",
+  "kind": "comprobante",
+  "folio": "015635",
+  "duplicate_of": null,
+  "uncertain": [
+    "El material dice «Chatarro» o «Chatarra», la letra no lo aclara.",
+    "El detalle es una sola línea, «160 kg», sin pesaje de camión."
+  ],
+  "reviewed_by_human": false,
+  "extraction": {
+    "kind": "comprobante",
+    "receipt_number": "015635",
+    "date_raw": "18/09/2026",
+    "counterparty": null,
+    "material_raw": "Chatarro",
+    "plate": null,
+    "observations": null,
+    "weighing": {
+      "gross": null,
+      "tare": null,
+      "net": {
+        "raw": "160",
+        "value": 160,
+        "legible": true,
+        "replaces": null
+      },
+      "unit": "kg",
+      "deductions": [],
+      "final_net": null
+    },
+    "settlement": {
+      "total": {
+        "raw": "40,00",
+        "value": 40,
+        "legible": true,
+        "replaces": null
+      },
+      "payments": [],
+      "owed": null
+    },
+    "notes": []
+  }
+}
