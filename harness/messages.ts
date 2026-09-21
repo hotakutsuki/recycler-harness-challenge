@@ -18,6 +18,7 @@ export function messageKey(flag: Flag): string {
   if (flag.code === "V7" && flag.params.field === "date") return "flag.V7.date";
   if (flag.code === "V9" && flag.params.field === "total") return "flag.V9.total";
   if (flag.code === "V9" && flag.params.field === "weights") return "flag.V9.weights";
+  if (flag.code === "V6" && flag.params.accumulated) return "flag.V6.accumulated";
   if (flag.code === "V6" && flag.severity === "warning") return "flag.V6.overpaid";
   if (flag.code === "V4" && flag.severity === "warning") return "flag.V4.noTotal";
   return `flag.${flag.code}`;

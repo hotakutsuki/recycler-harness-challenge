@@ -31,14 +31,36 @@ Requires Node 20+ and an Anthropic API key.
 
 ```bash
 npm install
-cp .env.example .env     # add your ANTHROPIC_API_KEY
-npm run dev              # http://localhost:3000
+cp .env.example .env
+npm run db:migrate && npm run db:seed
+npm run dev              # http://localhost:3000, reads documents with the model
 ```
 
-No Docker needed. A `docker compose up` path exists for a production-like check, with
-`./data` mounted from the host — the same image that would be deployed.
+### Without an API key
 
-There is no hosted demo and no demo video: this repository is the whole delivery.
+Every screen works without one. `EXTRACTOR=stub` replays the reading from the
+ground truth instead of calling the model:
+
+```bash
+npm run demo             # loads the 27 documents through the whole pipeline
+npm run dev:demo         # the app, with the stub
+```
+
+`npm run demo` is not a database fixture — it runs the same pipeline an upload
+does, so what you see in the review screen and the report is what the checks
+actually produced. The stub only answers for photos that are byte-identical to
+the dataset images and refuses anything else, and every screen it feeds says so.
+
+| Screen | |
+|---|---|
+| `/capturar` | phone capture; each sheet shows its own state as it is read |
+| `/revisar` | the inbox, ordered by what needs a person first |
+| `/revisar/[id]` | the photo beside what was read, with the failed checks |
+| `/reportes` | material in, money out, balances still owed |
+| `/configuracion` | the yard's materials, prices and check settings |
+
+No Docker needed. There is no hosted demo and no demo video: this repository is the
+whole delivery.
 
 | Command | |
 |---|---|

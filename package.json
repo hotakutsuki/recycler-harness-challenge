@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "dev:lan": "next dev -H 0.0.0.0",
+    "dev:lan": "EXTRACTOR=stub next dev -H 0.0.0.0",
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
@@ -13,7 +13,9 @@
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
     "db:reset": "prisma migrate reset --force",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "dev:demo": "EXTRACTOR=stub next dev",
+    "demo": "EXTRACTOR=stub tsx evals/demo.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.127.0",

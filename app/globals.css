@@ -333,3 +333,20 @@ button.primary:disabled { background: #b9c6d0; cursor: not-allowed; }
                       border-radius: 999px; }
 .bandeja .marcas .b { background: #fdecea; color: var(--bad); }
 .bandeja .marcas .w { background: #fff4d6; color: var(--warn); }
+
+/* --- reportes ----------------------------------------------------------- */
+.basis { color: var(--muted); font-size: 13.5px; margin: -6px 0 18px; }
+
+.reporte { width: 100%; border-collapse: collapse; font-size: 14px; }
+.reporte th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .3px;
+              color: var(--muted); border-bottom: 1px solid var(--line); padding: 6px 10px 6px 0; }
+.reporte td { padding: 8px 10px 8px 0; border-bottom: 1px solid #f0f2f4; }
+.reporte .n { text-align: right; font-variant-numeric: tabular-nums; }
+.reporte tfoot th { border-bottom: 0; border-top: 2px solid var(--line); color: var(--ink);
+                    font-size: 13px; text-transform: none; letter-spacing: 0; padding-top: 10px; }
+.reporte .tipo { color: var(--muted); font-size: 12px; }
+
+@media (max-width: 620px) {
+  .reporte { font-size: 13px; }
+  .reporte th, .reporte td { padding-right: 6px; }
+}

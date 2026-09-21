@@ -187,6 +187,14 @@ export function validate(
     add("V6", "warning", { total: round2(total), paid: round2(paid) });
   }
 
+  // A balance larger than the purchase cannot be what is left of that purchase:
+  // it is the supplier's running account, written in the same margin. Reading it
+  // as this document's remainder would overstate the day's outstanding cash, so
+  // it is surfaced rather than quietly added up.
+  if (total != null && owed != null && owed > total + config.amountEpsilon) {
+    add("V6", "warning", { total: round2(total), owed: round2(owed), accumulated: 1 });
+  }
+
   // ---- the document as a whole -------------------------------------------
   if (doc.settlement.total == null) {
     if (doc.linesTotal != null) {
