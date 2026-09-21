@@ -5,6 +5,7 @@ CREATE TABLE "Sheet" (
     "status" TEXT NOT NULL DEFAULT 'queued',
     "rawExtraction" TEXT,
     "flags" TEXT,
+    "correctedExtraction" TEXT,
     "error" TEXT,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "committedAt" DATETIME,
@@ -15,14 +16,20 @@ CREATE TABLE "Sheet" (
 CREATE TABLE "WeighingEvent" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "sheetId" TEXT NOT NULL,
+    "kind" TEXT NOT NULL,
+    "folio" TEXT,
     "date" TEXT,
-    "supplier" TEXT,
-    "plate" TEXT,
-    "weigher" TEXT,
-    "truckGrossKg" REAL,
-    "truckTareKg" REAL,
-    "truckNetKg" REAL,
+    "counterparty" TEXT,
+    "truckGross" REAL,
+    "truckTare" REAL,
+    "truckNet" REAL,
     "truckUnit" TEXT,
+    "deductions" REAL,
+    "finalNet" REAL,
+    "bulkMaterialId" TEXT,
+    "total" REAL,
+    "paid" REAL,
+    "owed" REAL,
     CONSTRAINT "WeighingEvent_sheetId_fkey" FOREIGN KEY ("sheetId") REFERENCES "Sheet" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -33,13 +40,11 @@ CREATE TABLE "Line" (
     "position" INTEGER NOT NULL,
     "materialRaw" TEXT NOT NULL,
     "materialId" TEXT,
+    "quantity" REAL,
     "unit" TEXT,
-    "grossKg" REAL,
-    "deductionKg" REAL,
-    "deductionReason" TEXT,
-    "netKg" REAL,
-    "price" REAL,
+    "unitPrice" REAL,
     "amount" REAL,
+    "note" TEXT,
     CONSTRAINT "Line_eventId_fkey" FOREIGN KEY ("eventId") REFERENCES "WeighingEvent" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "Line_materialId_fkey" FOREIGN KEY ("materialId") REFERENCES "Material" ("id") ON DELETE SET NULL ON UPDATE CASCADE
 );
@@ -100,7 +105,7 @@ CREATE UNIQUE INDEX "WeighingEvent_sheetId_key" ON "WeighingEvent"("sheetId");
 CREATE INDEX "WeighingEvent_date_idx" ON "WeighingEvent"("date");
 
 -- CreateIndex
-CREATE INDEX "WeighingEvent_supplier_idx" ON "WeighingEvent"("supplier");
+CREATE INDEX "WeighingEvent_folio_idx" ON "WeighingEvent"("folio");
 
 -- CreateIndex
 CREATE INDEX "Line_eventId_idx" ON "Line"("eventId");

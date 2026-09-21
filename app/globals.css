@@ -111,9 +111,12 @@ header.app p {
   font-weight: 600;
 }
 
-.status.pendiente { color: var(--warn); }
-.status.subida { color: var(--ok); }
-.status.error { color: var(--bad); }
+.status.pendiente, .status.queued, .status.extracting { color: var(--muted); }
+.status.needs_review { color: var(--warn); }
+.status.ready, .status.committed { color: var(--ok); }
+.status.failed, .status.error { color: var(--bad); }
+
+.card a { display: block; }
 
 .empty {
   border: 1px solid var(--line);
@@ -264,3 +267,69 @@ button.primary {
   .material { grid-template-columns: 1fr 1fr; }
   .material .name, .material .aliases, .material .range { grid-column: 1 / -1; }
 }
+
+/* --- revisión ----------------------------------------------------------- */
+main.wide { max-width: 1180px; }
+
+.revisar { display: grid; grid-template-columns: minmax(280px, 420px) 1fr; gap: 22px; align-items: start; }
+.revisar .foto { position: sticky; top: 16px; }
+.revisar .foto img { width: 100%; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+
+.badge { font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px;
+         background: #eef2f6; color: var(--muted); vertical-align: middle; }
+.badge.needs_review { background: #fff4d6; color: var(--warn); }
+.badge.ready { background: #e6f2ea; color: var(--ok); }
+.badge.committed { background: var(--ok); color: #fff; }
+.badge.failed { background: #fbe3e3; color: var(--bad); }
+
+.flags { list-style: none; padding: 0; margin: 0 0 18px; display: flex; flex-direction: column; gap: 8px; }
+.flags li { font-size: 13.5px; padding: 9px 12px; border-radius: 0 8px 8px 0; }
+.flags li.blocking { background: #fdecea; border-left: 4px solid var(--bad); }
+.flags li.warning { background: #fffaea; border-left: 4px solid var(--warn); }
+.flags strong { text-transform: uppercase; font-size: 11px; letter-spacing: .4px; }
+
+.campos { width: 100%; border-collapse: collapse; background: var(--card);
+          border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.campos th { text-align: left; font-size: 13px; color: var(--muted); font-weight: 600;
+             padding: 6px 12px; width: 170px; }
+.campos td { padding: 5px 12px 5px 0; }
+.campos tr:nth-child(even) { background: #fafbfc; }
+.campos input { font-size: 14px; padding: 6px 9px; }
+
+.acciones { display: flex; gap: 10px; margin-top: 16px; }
+.acciones button { flex: 1; }
+button.secondary { padding: 14px; border: 1px solid var(--accent); border-radius: 10px;
+                   background: #fff; color: var(--accent); font: inherit; font-size: 15px;
+                   font-weight: 600; cursor: pointer; }
+button.primary:disabled { background: #b9c6d0; cursor: not-allowed; }
+
+.stub { background: #eef2f6; border-left: 4px solid var(--accent); padding: 10px 14px;
+        border-radius: 0 8px 8px 0; font-size: 13px; color: var(--muted); }
+.error { background: #fdecea; border-left: 4px solid var(--bad); padding: 10px 14px;
+         border-radius: 0 8px 8px 0; font-size: 13.5px; }
+
+.auditoria { margin-top: 24px; font-size: 13px; color: var(--muted); }
+.auditoria h3 { font-size: 14px; color: var(--ink); margin: 0 0 6px; }
+.auditoria ul { margin: 0; padding-left: 18px; }
+.auditoria code { background: #eef2f6; padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+
+@media (max-width: 860px) {
+  .revisar { grid-template-columns: 1fr; }
+  .revisar .foto { position: static; }
+}
+
+/* --- bandeja ------------------------------------------------------------ */
+.bandeja { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.bandeja a { display: grid; grid-template-columns: 56px 1fr auto; gap: 14px; align-items: center;
+             background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+             padding: 10px 14px; text-decoration: none; color: inherit; }
+.bandeja a:hover { border-color: var(--accent); }
+.bandeja img { width: 56px; height: 56px; object-fit: cover; border-radius: 6px; background: #eceff2; }
+.bandeja .info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.bandeja .tipo { font-weight: 400; color: var(--muted); font-size: 13px; }
+.bandeja .sub { color: var(--muted); font-size: 13px; }
+.bandeja .marcas { display: flex; gap: 6px; margin-top: 2px; }
+.bandeja .marcas em { font-style: normal; font-size: 11px; font-weight: 700; padding: 1px 7px;
+                      border-radius: 999px; }
+.bandeja .marcas .b { background: #fdecea; color: var(--bad); }
+.bandeja .marcas .w { background: #fff4d6; color: var(--warn); }

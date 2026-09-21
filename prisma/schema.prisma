@@ -24,6 +24,10 @@ model Sheet {
   rawExtraction String?
   /// The flags raised by validation, as JSON text.
   flags         String?
+  /// The extraction after a person corrected it. The raw one above is never
+  /// touched: keeping both is what lets us measure the harness on real paper,
+  /// and what makes the audit trail mean anything.
+  correctedExtraction String?
   error         String?
   createdAt     DateTime  @default(now())
   committedAt   DateTime?
@@ -37,53 +41,59 @@ model Sheet {
   @@index([createdAt])
 }
 
-/// One weighing: a truck (or a walk-in delivery) on one date.
+/// One purchase: a tarjeta from the small scale, or a truck load on a comprobante.
 model WeighingEvent {
-  id       String @id @default(cuid())
-  sheetId  String @unique
-  sheet    Sheet  @relation(fields: [sheetId], references: [id], onDelete: Cascade)
+  id      String @id @default(cuid())
+  sheetId String @unique
+  sheet   Sheet  @relation(fields: [sheetId], references: [id], onDelete: Cascade)
 
-  /// ISO date. Null only while a sheet is still being reviewed — every committed
-  /// sheet has one, because all reporting is keyed on it.
-  date     String?
-  supplier String?
-  plate    String?
-  weigher  String?
+  /// tarjeta | comprobante
+  kind String
+  /// The card or receipt number. Pre-printed, so it identifies the paper.
+  folio String?
+  /// ISO date. Every committed document has one: all reporting is keyed on it.
+  date         String?
+  counterparty String?
 
-  truckGrossKg Float?
-  truckTareKg  Float?
-  truckNetKg   Float?
-  /// The unit the weigher actually wrote, kept so the review screen can show it back.
-  truckUnit    String?
+  /// Comprobante only: the truck weights, and the material of the whole load.
+  truckGross     Float?
+  truckTare      Float?
+  truckNet       Float?
+  truckUnit      String?
+  deductions     Float?
+  finalNet       Float?
+  bulkMaterialId String?
+
+  /// What the load came to, what was actually paid, and what is still owed.
+  /// A purchase and a payment are different events on this paperwork.
+  total Float?
+  paid  Float?
+  owed  Float?
 
   lines Line[]
 
   @@index([date])
-  @@index([supplier])
+  @@index([folio])
 }
 
-/// One material weighed within an event.
+/// One material weighed within an event. Tarjetas have several; a comprobante
+/// buys a whole truck of one material and has none.
 model Line {
   id      String        @id @default(cuid())
   eventId String
   event   WeighingEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
   position Int
-  /// Exactly as written on the sheet: "chat liv", not "Chatarra liviana".
+  /// Exactly as written on the paper: "chat", "grues", "Radiador ALU".
   materialRaw String
   materialId  String?
   material    Material? @relation(fields: [materialId], references: [id])
 
-  unit         String?
-  grossKg      Float?
-  deductionKg  Float?
-  deductionReason String?
-  netKg        Float?
-
-  /// Unit price applied, in the material's price unit. From the sheet when it
-  /// carries prices, otherwise from the catalog.
-  price  Float?
-  amount Float?
+  quantity  Float?
+  unit      String?
+  unitPrice Float?
+  amount    Float?
+  note      String?
 
   @@index([eventId])
   @@index([materialId])

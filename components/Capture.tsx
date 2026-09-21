@@ -3,12 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import { shrink } from "@/lib/shrink";
 
+type Status = "pendiente" | "queued" | "extracting" | "needs_review" | "ready" | "committed" | "failed" | "error";
+
 interface Photo {
   id: string;
-  filename: string;
   url: string;
   uploadedAt: string;
-  status: "pendiente" | "subida" | "error";
+  status: Status;
+  folio?: string | null;
   preview?: string;
 }
 
@@ -26,23 +28,41 @@ export interface CaptureLabels {
   hint: string;
   empty: string;
   uploading: string;
-  saved: string;
   failed: string;
-  wip: string;
-  wipTitle: string;
+  /** One label per pipeline status, so this component holds no Spanish of its own. */
+  status: Record<string, string>;
+  review: string;
 }
 
 export function Capture({ labels, locale }: { labels: CaptureLabels; locale: string }) {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Reading a document takes tens of seconds, so the list polls while anything
+  // is still in flight and goes quiet once everything has settled.
   useEffect(() => {
-    fetch("/api/sheets")
-      .then((r) => r.json())
-      .then((data: { photos: Omit<Photo, "status">[] }) =>
-        setPhotos(data.photos.map((p) => ({ ...p, status: "subida" as const }))),
-      )
-      .catch(() => {});
+    let cancelled = false;
+
+    async function refresh() {
+      try {
+        const response = await fetch("/api/sheets");
+        const data = (await response.json()) as { photos: Photo[] };
+        if (cancelled) return;
+        setPhotos((prev) => {
+          const local = prev.filter((p) => p.status === "pendiente");
+          return [...local, ...data.photos];
+        });
+      } catch {
+        /* a failed poll is not worth showing: the next one is two seconds away */
+      }
+    }
+
+    void refresh();
+    const timer = setInterval(refresh, 2500);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
   }, []);
 
   async function upload(files: FileList) {
@@ -65,11 +85,7 @@ export function Capture({ labels, locale }: { labels: CaptureLabels; locale: str
         if (!response.ok) throw new Error(await response.text());
         const { photos: saved } = (await response.json()) as { photos: Photo[] };
 
-        setPhotos((prev) =>
-          prev.map((p) =>
-            p.id === localId ? { ...saved[0]!, status: "subida" as const, preview } : p,
-          ),
-        );
+        setPhotos((prev) => prev.map((p) => (p.id === localId ? { ...saved[0]!, preview } : p)));
       } catch {
         setPhotos((prev) =>
           prev.map((p) => (p.id === localId ? { ...p, status: "error" as const } : p)),
@@ -102,20 +118,21 @@ export function Capture({ labels, locale }: { labels: CaptureLabels; locale: str
           <div className="grid">
             {photos.map((photo) => (
               <figure className="card" key={photo.id} style={{ margin: 0 }}>
-                <img src={photo.preview ?? photo.url} alt="Hoja de pesaje" />
+                <a href={photo.status === "pendiente" ? undefined : `/revisar/${photo.id}`}>
+                  <img src={photo.preview ?? photo.url} alt="" />
+                </a>
                 <figcaption className="meta">
                   <span>
-                    {new Date(photo.uploadedAt).toLocaleTimeString(locale, {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+                    {photo.folio ??
+                      new Date(photo.uploadedAt).toLocaleTimeString(locale, {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
                   </span>
                   <span className={`status ${photo.status}`}>
                     {photo.status === "pendiente"
                       ? labels.uploading
-                      : photo.status === "subida"
-                        ? labels.saved
-                        : labels.failed}
+                      : (labels.status[photo.status] ?? photo.status)}
                   </span>
                 </figcaption>
               </figure>
@@ -123,8 +140,8 @@ export function Capture({ labels, locale }: { labels: CaptureLabels; locale: str
           </div>
         )}
 
-      <p className="note">
-        <strong>{labels.wipTitle}</strong> {labels.wip}
+      <p className="hint" style={{ marginTop: 20 }}>
+        {labels.review}
       </p>
     </main>
   );

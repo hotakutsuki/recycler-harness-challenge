@@ -21,10 +21,16 @@ export default async function CapturarPage() {
           hint: t("capture.hint"),
           empty: t("capture.empty"),
           uploading: t("capture.uploading"),
-          saved: t("capture.saved"),
           failed: t("capture.failed"),
-          wip: t("capture.wip"),
-          wipTitle: t("common.wip"),
+          review: t("capture.review"),
+          status: {
+            queued: t("status.queued"),
+            extracting: t("status.extracting"),
+            needs_review: t("status.needs_review"),
+            ready: t("status.ready"),
+            committed: t("status.committed"),
+            failed: t("status.failed"),
+          },
         }}
       />
     </>
