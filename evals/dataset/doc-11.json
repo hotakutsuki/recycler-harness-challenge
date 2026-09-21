@@ -5,7 +5,8 @@
   "folio": "015632",
   "duplicate_of": null,
   "uncertain": [
-    "«Debo 596,25» está bajo el cuadro. Lo leo como saldo acumulado con ese proveedor, no como parte de esta compra."
+    "«Debo 596,25» está bajo el cuadro: saldo acumulado con ese proveedor, no parte de esta compra. Confirmado.",
+    "El material dice «chat», que el catálogo resuelve a Chatarra."
   ],
   "reviewed_by_human": false,
   "extraction": {

@@ -18,21 +18,21 @@ const DATASET = path.join(__dirname, "dataset");
 const OUT = process.argv[2] ?? null;
 const t = translator("es");
 
-interface Record {
+interface GroundTruth {
   id: string;
   folio: string;
   uncertain: string[];
   extraction: unknown;
 }
 
-const records: Record[] = fs
+const records: GroundTruth[] = fs
   .readdirSync(DATASET)
   .filter((f) => f.endsWith(".json"))
   .sort()
-  .map((f) => JSON.parse(fs.readFileSync(path.join(DATASET, f), "utf8")) as Record);
+  .map((f) => JSON.parse(fs.readFileSync(path.join(DATASET, f), "utf8")) as GroundTruth);
 
 const priors: PriorDocument[] = [];
-const report: Record<string, string[]> = {};
+const report: { [id: string]: string[] } = {};
 let clean = 0;
 
 for (const record of records) {

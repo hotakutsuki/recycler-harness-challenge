@@ -69,6 +69,9 @@ export const DEFAULT_CATALOG: Material[] = [
   { id: "perfil",      name: "Perfil",           aliases: ["perfil"],                                price: 1.40, unit: "kg", priceRange: { min: 1.00, max: 1.80 } },
   { id: "gruesa",      name: "Chatarra gruesa",  aliases: ["grues", "gruesa", "gioes"],              price: 1.15, unit: "kg", priceRange: { min: 0.80, max: 1.50 } },
   { id: "chatarra",    name: "Chatarra",         aliases: ["chat", "chatarra", "chatarrra"],         price: 0.25, unit: "kg", priceRange: { min: 0.15, max: 0.40 } },
+  // Apareció en la tarjeta 2778 y no estaba en el catálogo: el sistema la marcó
+  // como desconocida, que es exactamente lo que debía hacer.
+  { id: "chatarra_fina", name: "Chatarra fina",  aliases: ["chatarra fina", "chat fina", "fina"],    price: 0.05, unit: "kg", priceRange: { min: 0.02, max: 0.12 } },
   { id: "cobre",       name: "Cobre",            aliases: ["cobre", "cobre 1ra"],                    price: 6.10, unit: "kg", priceRange: { min: 4.50, max: 7.50 } },
   { id: "bronce",      name: "Bronce",           aliases: ["bronce", "bronc"],                       price: 4.00, unit: "kg", priceRange: { min: 3.00, max: 5.00 } },
   { id: "radiador",    name: "Radiador",         aliases: ["radiador", "radeador", "radiador alu"],  price: 0.90, unit: "kg", priceRange: { min: 0.60, max: 1.20 } },
