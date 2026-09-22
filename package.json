@@ -16,7 +16,8 @@
     "postinstall": "prisma generate",
     "dev:demo": "EXTRACTOR=stub next dev",
     "demo": "EXTRACTOR=stub tsx evals/demo.ts",
-    "eval:stub": "EXTRACTOR=stub tsx evals/run.ts"
+    "eval:stub": "EXTRACTOR=stub tsx evals/run.ts",
+    "retention": "tsx scripts/retention.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.127.0",

@@ -236,7 +236,17 @@ export default async function ReviewPage({
 
         <div className="review-doc">
           <div className="photo">
-            <img src={url(sheet.photoPath)} alt="" />
+            {sheet.photoDeletedAt ? (
+              // Past the retention window the photo is gone and the reading is
+              // not. Saying which, and when, beats an empty box.
+              <p className="gone">
+                {t("review.photoDeleted", {
+                  date: sheet.photoDeletedAt.toISOString().slice(0, 10),
+                })}
+              </p>
+            ) : (
+              <img src={url(sheet.photoPath)} alt="" />
+            )}
           </div>
 
           <div>

@@ -260,7 +260,7 @@ We considered writing a synthetic set instead and ran one early on. Real paper i
 - **What the annotations mean.** "Debo" reads as a balance carried to the supplier and the arithmetic supports it, but it is inference from 27 documents, not something the owner has confirmed. Same for "Abono" and "Transf.".
 - **The settlement tolerance of one dollar** comes from a single observation. It should be confirmed rather than hardened into a rule.
 - **Do the two document types ever refer to the same purchase?** They appear to be separate flows — carts on the small scale, trucks on the big one — which is what the design assumes.
-- **Settled:** photos kept 90 days after commit, then deleted while the extraction is kept; prices validated as a band rather than a value; amounts truncated down to five cents.
+- **Settled:** photos kept 90 days after commit, then deleted while the extraction is kept — implemented as `npm run retention`, a script for cron, because the app has no scheduler and should not pretend to; prices validated as a band rather than a value; amounts truncated down to five cents.
 
 ## 8. Reflections *(to be completed at submission)*
 - Time spent:

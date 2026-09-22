@@ -398,3 +398,6 @@ button.primary:disabled { background: #b9c6d0; cursor: not-allowed; }
 .accept label { display: flex; flex-direction: column; gap: 4px; font-size: 12px;
                 color: var(--muted); font-weight: 600; }
 .accept button { align-self: flex-start; padding: 10px 18px; font-size: 14px; }
+
+.photo .gone { background: var(--card); border: 1px dashed var(--line); border-radius: 10px;
+               padding: 28px 20px; color: var(--muted); font-size: 13.5px; text-align: center; margin: 0; }

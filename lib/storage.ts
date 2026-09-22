@@ -76,5 +76,13 @@ export async function read(filename: string): Promise<Buffer | null> {
   }
 }
 
+/** Deletes a stored photo. A file that is already gone is not an error. */
+export async function remove(filename: string): Promise<void> {
+  if (filename.includes("/") || filename.includes("\\") || filename.includes("..")) {
+    throw new Error(`refusing to delete outside the store: ${filename}`);
+  }
+  await fs.rm(path.join(UPLOADS, filename), { force: true });
+}
+
 export const contentType = (filename: string): string =>
   Object.entries(EXTENSIONS).find(([, ext]) => filename.endsWith(ext))?.[0] ?? "application/octet-stream";
