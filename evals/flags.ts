@@ -16,7 +16,7 @@ import { translator } from "../lib/i18n";
  */
 const DATASET = path.join(__dirname, "dataset");
 const OUT = process.argv[2] ?? null;
-const t = translator("es");
+const t = translator("en");
 
 interface GroundTruth {
   id: string;
@@ -47,12 +47,12 @@ for (const record of records) {
 
   if (flags.length === 0) clean++;
   console.log(
-    `${record.id}  ${flags.length === 0 ? "limpio" : flags.map((f) => f.code).join(", ")}`,
+    `${record.id}  ${flags.length === 0 ? "clean" : flags.map((f) => f.code).join(", ")}`,
   );
 }
 
-console.log(`\n${clean} de ${records.length} pasan sin ninguna marca.`);
+console.log(`\n${clean} of ${records.length} raise nothing at all.`);
 if (OUT) {
   fs.writeFileSync(OUT, JSON.stringify(report, null, 2) + "\n");
-  console.log(`marcas escritas en ${OUT}`);
+  console.log(`flags written to ${OUT}`);
 }

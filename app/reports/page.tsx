@@ -1,4 +1,6 @@
 import { AppHeader } from "@/components/AppHeader";
+import { RankedBars, StackedDays } from "@/components/charts";
+import { ReportFilters, type ReportFilter } from "@/components/ReportFilters";
 import { db } from "@/lib/db";
 import { getTranslator } from "@/lib/i18n.server";
 
@@ -16,12 +18,42 @@ import { getTranslator } from "@/lib/i18n.server";
  * are still waiting, because a total that quietly omits a third of the week is
  * worse than no total at all.
  */
-export default async function ReportesPage() {
+export default async function ReportsPage({
+  searchParams,
+}: {
+  searchParams: Promise<ReportFilter>;
+}) {
   const { lang, t } = await getTranslator();
+  const filter = await searchParams;
+
+  // A material filter matches either a tarjeta line or a whole truck load of it,
+  // because "how much copper did we buy" should not depend on which piece of
+  // paper it arrived on.
+  const materialWhere = filter.material
+    ? {
+        OR: [
+          { bulkMaterialId: filter.material },
+          { lines: { some: { materialId: filter.material } } },
+        ],
+      }
+    : {};
 
   const [events, pending, config] = await Promise.all([
     db.weighingEvent.findMany({
-      where: { sheet: { status: "committed" } },
+      where: {
+        sheet: { status: "committed" },
+        ...(filter.kind ? { kind: filter.kind } : {}),
+        ...(filter.counterparty ? { counterparty: filter.counterparty } : {}),
+        ...(filter.from || filter.to
+          ? {
+              date: {
+                ...(filter.from ? { gte: filter.from } : {}),
+                ...(filter.to ? { lte: filter.to } : {}),
+              },
+            }
+          : {}),
+        ...materialWhere,
+      },
       include: { lines: { include: { material: true } } },
       orderBy: { date: "asc" },
     }),
@@ -29,8 +61,19 @@ export default async function ReportesPage() {
     db.config.findUnique({ where: { id: 1 } }),
   ]);
 
-  const materials = await db.material.findMany();
+  const materials = await db.material.findMany({ orderBy: { position: "asc" } });
   const nameOf = new Map(materials.map((m) => [m.id, m.name]));
+
+  const counterparties = (
+    await db.weighingEvent.findMany({
+      where: { counterparty: { not: null }, sheet: { status: "committed" } },
+      select: { counterparty: true },
+      distinct: ["counterparty"],
+    })
+  )
+    .map((e) => e.counterparty)
+    .filter((c): c is string => Boolean(c))
+    .sort();
 
   const locale = lang === "es" ? "es-EC" : "en-US";
   const money = new Intl.NumberFormat(locale, {
@@ -60,7 +103,10 @@ export default async function ReportesPage() {
       // A truck load is one material, weighed whole; the price was never written.
       add(event.bulkMaterialId, event.bulkMaterialId ? "" : "—", event.finalNet ?? event.truckNet, event.total);
     } else {
-      for (const line of event.lines) add(line.materialId, line.materialRaw, line.quantity, line.amount);
+      for (const line of event.lines) {
+        if (filter.material && line.materialId !== filter.material) continue;
+        add(line.materialId, line.materialRaw, line.quantity, line.amount);
+      }
     }
   }
 
@@ -95,6 +141,9 @@ export default async function ReportesPage() {
       <AppHeader lang={lang} t={t} />
       <main className="wide">
         <h2 className="page">{t("reports.title")}</h2>
+
+        <ReportFilters filter={filter} materials={materials} counterparties={counterparties} t={t} />
+
         <p className="basis">
           {t("reports.basis", { committed: events.length })}
           {pending > 0 ? ` ${t("reports.pending", { pending })}` : ""}
@@ -107,7 +156,12 @@ export default async function ReportesPage() {
             <section className="panel">
               <h3>{t("reports.materials")}</h3>
               <p className="hint">{t("reports.materials.hint")}</p>
-              <table className="reporte">
+              <RankedBars
+                data={rows.map((r) => ({ label: r.name || t("reports.unknownMaterial"), value: r.amount }))}
+                format={(n) => money.format(n)}
+                otherLabel={t("reports.other")}
+              />
+              <table className="report">
                 <thead>
                   <tr>
                     <th>{t("settings.material")}</th>
@@ -138,7 +192,12 @@ export default async function ReportesPage() {
             <section className="panel">
               <h3>{t("reports.cash")}</h3>
               <p className="hint">{t("reports.cash.hint")}</p>
-              <table className="reporte">
+              <StackedDays
+                data={days.map(([day, d]) => ({ day, paid: d.paid, owed: d.owed }))}
+                format={(n) => money.format(n)}
+                labels={{ paid: t("reports.handedOver"), owed: t("reports.stillOwed") }}
+              />
+              <table className="report">
                 <thead>
                   <tr>
                     <th>{t("reports.day")}</th>
@@ -168,7 +227,7 @@ export default async function ReportesPage() {
               {owing.length === 0 ? (
                 <p className="hint">{t("reports.noBalances")}</p>
               ) : (
-                <table className="reporte">
+                <table className="report">
                   <thead>
                     <tr>
                       <th>{t("reports.document")}</th>
@@ -181,7 +240,7 @@ export default async function ReportesPage() {
                     {owing.map((e) => (
                       <tr key={e.id}>
                         <td>
-                          {e.folio ?? "—"} <span className="tipo">{t(`doc.${e.kind}`)}</span>
+                          {e.folio ?? "—"} <span className="kind">{t(`doc.${e.kind}`)}</span>
                         </td>
                         <td>{e.date ?? "—"}</td>
                         <td className="n">{money.format(e.total ?? 0)}</td>
@@ -203,7 +262,7 @@ export default async function ReportesPage() {
               <section className="panel">
                 <h3>{t("reports.accumulated")}</h3>
                 <p className="hint">{t("reports.accumulated.hint")}</p>
-                <table className="reporte">
+                <table className="report">
                   <thead>
                     <tr>
                       <th>{t("reports.document")}</th>
@@ -216,7 +275,7 @@ export default async function ReportesPage() {
                     {accumulated.map((e) => (
                       <tr key={e.id}>
                         <td>
-                          {e.folio ?? "—"} <span className="tipo">{t(`doc.${e.kind}`)}</span>
+                          {e.folio ?? "—"} <span className="kind">{t(`doc.${e.kind}`)}</span>
                         </td>
                         <td>{e.date ?? "—"}</td>
                         <td className="n">{money.format(e.total ?? 0)}</td>

@@ -8,7 +8,7 @@ import { getTranslator } from "@/lib/i18n.server";
  * the language it is not using — and the client component stays about uploading,
  * with no opinion on language.
  */
-export default async function CapturarPage() {
+export default async function CapturePage() {
   const { lang, t } = await getTranslator();
 
   return (

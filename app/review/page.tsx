@@ -23,7 +23,7 @@ const ORDER: Record<string, number> = {
   committed: 5,
 };
 
-export default async function BandejaPage() {
+export default async function InboxPage() {
   await recoverInterrupted();
   const { lang, t } = await getTranslator();
 
@@ -51,7 +51,7 @@ export default async function BandejaPage() {
         {sorted.length === 0 ? (
           <p className="empty">{t("review.empty")}</p>
         ) : (
-          <ul className="bandeja">
+          <ul className="inbox">
             {sorted.map((sheet) => {
               const flags: Flag[] = sheet.flags ? (JSON.parse(sheet.flags) as Flag[]) : [];
               const blocking = flags.filter((f) => f.severity === "blocking").length;
@@ -59,12 +59,12 @@ export default async function BandejaPage() {
 
               return (
                 <li key={sheet.id}>
-                  <Link href={`/revisar/${sheet.id}`}>
+                  <Link href={`/review/${sheet.id}`}>
                     <img src={url(sheet.photoPath)} alt="" />
                     <div className="info">
                       <strong>
                         {sheet.event?.folio ?? "—"}{" "}
-                        <span className="tipo">
+                        <span className="kind">
                           {sheet.event?.kind
                             ? t(`doc.${sheet.event.kind}`)
                             : t(`status.${sheet.status}`)}
@@ -74,7 +74,7 @@ export default async function BandejaPage() {
                         {sheet.event?.date ?? ""}
                         {sheet.event?.total != null ? ` · ${money.format(sheet.event.total)}` : ""}
                       </span>
-                      <span className="marcas">
+                      <span className="counts">
                         {blocking > 0 && <em className="b">{blocking}</em>}
                         {warnings > 0 && <em className="w">{warnings}</em>}
                       </span>

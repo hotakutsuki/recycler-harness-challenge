@@ -3,10 +3,10 @@ import { LanguageSwitch } from "./LanguageSwitch";
 import type { Lang, Translate } from "@/lib/i18n";
 
 const NAV = [
-  { href: "/capturar", key: "nav.capture" },
-  { href: "/revisar", key: "nav.review", soon: true },
-  { href: "/reportes", key: "nav.reports", soon: true },
-  { href: "/configuracion", key: "nav.settings" },
+  { href: "/capture", key: "nav.capture" },
+  { href: "/review", key: "nav.review", soon: true },
+  { href: "/reports", key: "nav.reports", soon: true },
+  { href: "/settings", key: "nav.settings" },
 ];
 
 export function AppHeader({ lang, t }: { lang: Lang; t: Translate }) {

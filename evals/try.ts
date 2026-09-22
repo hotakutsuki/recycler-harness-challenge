@@ -10,11 +10,11 @@ import { translator } from "../lib/i18n";
 /** Extracts one photo and prints what the harness makes of it. */
 const file = process.argv[2];
 if (!file) {
-  console.error("uso: npx tsx evals/try.ts <ruta-a-la-foto>");
+  console.error("usage: npx tsx evals/try.ts <path-to-photo>");
   process.exit(1);
 }
 
-const t = translator("es");
+const t = translator("en");
 
 async function main() {
   const started = Date.now();
@@ -24,12 +24,12 @@ async function main() {
   console.log(JSON.stringify(document, null, 2));
 
   const flags = validate(normalize(document, DEFAULT_CONFIG), DEFAULT_CONFIG);
-  console.log(`\n${flags.length === 0 ? "sin marcas" : "marcas:"}`);
+  console.log(`\n${flags.length === 0 ? "no flags" : "flags:"}`);
   for (const flag of flags) {
     const { text, where, severity } = describeFlag(flag, t);
     console.log(`  ${flag.code} · ${severity}${where ? ` · ${where}` : ""} — ${text}`);
   }
-  console.log(`\n${seconds}s · ${usage.inputTokens} tokens de entrada · ${usage.outputTokens} de salida`);
+  console.log(`\n${seconds}s · ${usage.inputTokens} input tokens · ${usage.outputTokens} output`);
 }
 
 main().catch((error) => {

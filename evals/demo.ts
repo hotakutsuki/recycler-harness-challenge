@@ -20,23 +20,23 @@ import { isBlocking } from "../harness/validate";
  *   npm run demo -- 6       # just the first six
  */
 
-const FOTOS = path.join(process.cwd(), "evals", "dataset", "fotos");
+const PHOTOS = path.join(process.cwd(), "evals", "dataset", "fotos");
 const limit = Number(process.argv[2] ?? "0");
 
 /** Two left uncommitted on purpose: an inbox that is always empty shows nothing. */
 const LEAVE_PENDING = new Set(["doc-26", "doc-27"]);
 
 async function main() {
-  if (!fs.existsSync(FOTOS)) {
-    console.error(`no hay fotos en ${FOTOS}`);
+  if (!fs.existsSync(PHOTOS)) {
+    console.error(`no photos in ${PHOTOS}`);
     process.exit(1);
   }
 
-  const files = fs.readdirSync(FOTOS).filter((f) => f.endsWith(".jpeg")).sort();
+  const files = fs.readdirSync(PHOTOS).filter((f) => f.endsWith(".jpeg")).sort();
   const chosen = limit > 0 ? files.slice(0, limit) : files;
 
   console.log(
-    `cargando ${chosen.length} documentos${usingStub() ? " (modo de prueba, sin llamar al modelo)" : " con el modelo"}`,
+    `loading ${chosen.length} documents${usingStub() ? " (stub mode, no model call)" : " with the model"}`,
   );
 
   const config = await loadConfig();
@@ -45,7 +45,7 @@ async function main() {
 
   for (const file of chosen) {
     const id = path.parse(file).name;
-    const bytes = fs.readFileSync(path.join(FOTOS, file));
+    const bytes = fs.readFileSync(path.join(PHOTOS, file));
     const photo = await save(new File([new Uint8Array(bytes)], file, { type: "image/jpeg" }));
     const sheet = await db.sheet.create({ data: { photoPath: photo.filename } });
 
@@ -68,7 +68,7 @@ async function main() {
 
       commit ? committed++ : pending++;
       console.log(
-        `  ${id}  ${normalized.folio ?? "—"}  ${commit ? "confirmado" : "pendiente"}` +
+        `  ${id}  ${normalized.folio ?? "—"}  ${commit ? "committed" : "pending"}` +
           (flags.length ? `  (${flags.map((f) => f.code).join(", ")})` : ""),
       );
     } catch (error) {
@@ -76,12 +76,12 @@ async function main() {
         where: { id: sheet.id },
         data: { status: "failed", error: error instanceof Error ? error.message : String(error) },
       });
-      console.log(`  ${id}  falló: ${error instanceof Error ? error.message : error}`);
+      console.log(`  ${id}  failed: ${error instanceof Error ? error.message : error}`);
       pending++;
     }
   }
 
-  console.log(`\n${committed} confirmados, ${pending} esperando a una persona.`);
+  console.log(`\n${committed} committed, ${pending} waiting for a person.`);
 }
 
 main()

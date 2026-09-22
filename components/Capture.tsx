@@ -118,7 +118,7 @@ export function Capture({ labels, locale }: { labels: CaptureLabels; locale: str
           <div className="grid">
             {photos.map((photo) => (
               <figure className="card" key={photo.id} style={{ margin: 0 }}>
-                <a href={photo.status === "pendiente" ? undefined : `/revisar/${photo.id}`}>
+                <a href={photo.status === "pendiente" ? undefined : `/review/${photo.id}`}>
                   <img src={photo.preview ?? photo.url} alt="" />
                 </a>
                 <figcaption className="meta">

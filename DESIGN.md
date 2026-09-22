@@ -186,7 +186,7 @@ The upload handler writes the photo, creates the row, and returns immediately. A
 **Repo layout.**
 
 ```
-app/                      # routes: /capturar, /revisar, /revisar/[id], /reportes, /configuracion
+app/                      # routes: /capture, /review, /review/[id], /reports, /settings
   api/sheets/...          # upload, status, commit
 harness/                  # the harness core — no Next.js imports
   schema.ts  extract.ts  normalize.ts  validate.ts  pipeline.ts

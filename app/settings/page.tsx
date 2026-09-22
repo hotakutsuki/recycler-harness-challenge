@@ -65,10 +65,10 @@ async function saveSettings(formData: FormData) {
     });
   }
 
-  revalidatePath("/configuracion");
+  revalidatePath("/settings");
 }
 
-export default async function ConfiguracionPage({
+export default async function SettingsPage({
   searchParams,
 }: {
   searchParams: Promise<{ saved?: string }>;

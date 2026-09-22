@@ -3,6 +3,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { db } from "@/lib/db";
 import { url } from "@/lib/storage";
 import { getTranslator } from "@/lib/i18n.server";
+import type { Translate } from "@/lib/i18n";
 import { usingStub } from "@/lib/extractor";
 import { check, persist } from "@/lib/pipeline";
 import { describe as describeFlag } from "@/harness/messages";
@@ -32,36 +33,36 @@ const text = (field: NumberField | null | undefined): string =>
   field == null ? "" : field.legible ? field.raw : "";
 
 /** Every editable number on the document, in the order it is written. */
-function fields(doc: Document): FieldEdit[] {
+function fields(doc: Document, t: Translate): FieldEdit[] {
   const out: FieldEdit[] = [];
-  out.push({ path: "date_raw", label: "fecha", value: doc.date_raw ?? "" });
+  out.push({ path: "date_raw", label: t("field.date"), value: doc.date_raw ?? "" });
 
   if (doc.kind === "tarjeta") {
-    out.push({ path: "card_number", label: "n.º", value: doc.card_number ?? "" });
+    out.push({ path: "card_number", label: t("field.number"), value: doc.card_number ?? "" });
     doc.lines.forEach((line, i) => {
-      out.push({ path: `lines.${i}.quantity`, label: "cantidad", value: text(line.quantity) });
-      out.push({ path: `lines.${i}.material_raw`, label: "material", value: line.material_raw });
-      out.push({ path: `lines.${i}.unit_price`, label: "precio", value: text(line.unit_price) });
-      out.push({ path: `lines.${i}.amount`, label: "importe", value: text(line.amount) });
+      out.push({ path: `lines.${i}.quantity`, label: t("field.quantity"), value: text(line.quantity) });
+      out.push({ path: `lines.${i}.material_raw`, label: t("field.material"), value: line.material_raw });
+      out.push({ path: `lines.${i}.unit_price`, label: t("field.price"), value: text(line.unit_price) });
+      out.push({ path: `lines.${i}.amount`, label: t("field.amount"), value: text(line.amount) });
     });
   } else {
-    out.push({ path: "receipt_number", label: "n.º", value: doc.receipt_number ?? "" });
-    out.push({ path: "material_raw", label: "material", value: doc.material_raw ?? "" });
-    out.push({ path: "weighing.gross", label: "entero (E)", value: text(doc.weighing.gross) });
-    out.push({ path: "weighing.tare", label: "solo camión (S)", value: text(doc.weighing.tare) });
-    out.push({ path: "weighing.net", label: "neto (N)", value: text(doc.weighing.net) });
+    out.push({ path: "receipt_number", label: t("field.number"), value: doc.receipt_number ?? "" });
+    out.push({ path: "material_raw", label: t("field.material"), value: doc.material_raw ?? "" });
+    out.push({ path: "weighing.gross", label: t("field.gross"), value: text(doc.weighing.gross) });
+    out.push({ path: "weighing.tare", label: t("field.tare"), value: text(doc.weighing.tare) });
+    out.push({ path: "weighing.net", label: t("field.net"), value: text(doc.weighing.net) });
     doc.weighing.deductions.forEach((d, i) => {
-      out.push({ path: `weighing.deductions.${i}.amount`, label: "descuento", value: text(d.amount) });
-      out.push({ path: `weighing.deductions.${i}.reason`, label: "motivo", value: d.reason ?? "" });
+      out.push({ path: `weighing.deductions.${i}.amount`, label: t("field.deduction"), value: text(d.amount) });
+      out.push({ path: `weighing.deductions.${i}.reason`, label: t("field.reason"), value: d.reason ?? "" });
     });
-    out.push({ path: "weighing.final_net", label: "peso que se paga", value: text(doc.weighing.final_net) });
+    out.push({ path: "weighing.final_net", label: t("field.finalNet"), value: text(doc.weighing.final_net) });
   }
 
-  out.push({ path: "settlement.total", label: "total", value: text(doc.settlement.total) });
+  out.push({ path: "settlement.total", label: t("field.total"), value: text(doc.settlement.total) });
   doc.settlement.payments.forEach((p, i) => {
-    out.push({ path: `settlement.payments.${i}.amount`, label: `pago (${p.kind})`, value: text(p.amount) });
+    out.push({ path: `settlement.payments.${i}.amount`, label: t("field.payment", { kind: p.kind }), value: text(p.amount) });
   });
-  out.push({ path: "settlement.owed", label: "queda debiendo", value: text(doc.settlement.owed) });
+  out.push({ path: "settlement.owed", label: t("field.owed"), value: text(doc.settlement.owed) });
   return out;
 }
 
@@ -107,15 +108,15 @@ function applyEdit(doc: Document, path: string, raw: string): void {
   target[key] = raw.trim() === "" ? null : raw;
 }
 
-export default async function RevisarPage({
+export default async function ReviewPage({
   params,
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ guardado?: string }>;
+  searchParams: Promise<{ saved?: string }>;
 }) {
   const { id } = await params;
-  const { guardado } = await searchParams;
+  const { saved } = await searchParams;
   const { lang, t } = await getTranslator();
 
   const sheet = await db.sheet.findUnique({ where: { id }, include: { corrections: true } });
@@ -141,14 +142,14 @@ export default async function RevisarPage({
     for (const [key, value] of formData.entries()) {
       if (!key.startsWith("f.") || typeof value !== "string") continue;
       const path = key.slice(2);
-      const before = fields(previous).find((f) => f.path === path)?.value ?? "";
+      const before = fields(previous, t).find((f) => f.path === path)?.value ?? "";
       if (before === value) continue;
       applyEdit(edited, path, value);
       corrections.push({ field: path, from: before, to: value });
     }
 
     const { normalized, flags: newFlags } = await check(edited, id);
-    const committing = formData.get("accion") === "confirmar";
+    const committing = formData.get("action") === "confirmar";
 
     if (committing) await persist(id, normalized);
 
@@ -168,16 +169,16 @@ export default async function RevisarPage({
             field: c.field,
             fromValue: c.from,
             toValue: c.to,
-            user: "mostrador",
+            user: "counter",
           })),
         },
       },
     });
 
-    redirect(`/revisar/${id}?guardado=1`);
+    redirect(`/review/${id}?saved=1`);
   }
 
-  const editable = current ? fields(current) : [];
+  const editable = current ? fields(current, t) : [];
   const blocking = flags.filter((f) => f.severity === "blocking");
   const warnings = flags.filter((f) => f.severity === "warning");
 
@@ -186,10 +187,10 @@ export default async function RevisarPage({
       <AppHeader lang={lang} t={t} />
       <main className="wide">
         {usingStub() && <p className="stub">{t("review.stub")}</p>}
-        {guardado && <p className="saved">{t("common.saved")}</p>}
+        {saved && <p className="saved">{t("common.saved")}</p>}
 
-        <div className="revisar">
-          <div className="foto">
+        <div className="review-doc">
+          <div className="photo">
             <img src={url(sheet.photoPath)} alt="" />
           </div>
 
@@ -217,7 +218,7 @@ export default async function RevisarPage({
 
             {current && (
               <form action={save}>
-                <table className="campos">
+                <table className="fields">
                   <tbody>
                     {editable.map((field) => (
                       <tr key={field.path}>
@@ -230,14 +231,14 @@ export default async function RevisarPage({
                   </tbody>
                 </table>
 
-                <div className="acciones">
-                  <button type="submit" name="accion" value="guardar" className="secondary">
+                <div className="actions">
+                  <button type="submit" name="action" value="save" className="secondary">
                     {t("review.save")}
                   </button>
                   <button
                     type="submit"
-                    name="accion"
-                    value="confirmar"
+                    name="action"
+                    value="commit"
                     className="primary"
                     disabled={blocking.length > 0}
                   >
@@ -249,7 +250,7 @@ export default async function RevisarPage({
             )}
 
             {sheet.corrections.length > 0 && (
-              <div className="auditoria">
+              <div className="audit">
                 <h3>{t("review.corrections")}</h3>
                 <ul>
                   {sheet.corrections.map((c) => (

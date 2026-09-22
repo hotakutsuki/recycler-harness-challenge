@@ -53,11 +53,11 @@ the dataset images and refuses anything else, and every screen it feeds says so.
 
 | Screen | |
 |---|---|
-| `/capturar` | phone capture; each sheet shows its own state as it is read |
-| `/revisar` | the inbox, ordered by what needs a person first |
-| `/revisar/[id]` | the photo beside what was read, with the failed checks |
-| `/reportes` | material in, money out, balances still owed |
-| `/configuracion` | the yard's materials, prices and check settings |
+| `/capture` | phone capture; each sheet shows its own state as it is read |
+| `/review` | the inbox, ordered by what needs a person first |
+| `/review/[id]` | the photo beside what was read, with the failed checks |
+| `/reports` | material in, money out, balances still owed |
+| `/settings` | the yard's materials, prices and check settings |
 
 No Docker needed. There is no hosted demo and no demo video: this repository is the
 whole delivery.
