@@ -15,7 +15,8 @@
     "db:reset": "prisma migrate reset --force",
     "postinstall": "prisma generate",
     "dev:demo": "EXTRACTOR=stub next dev",
-    "demo": "EXTRACTOR=stub tsx evals/demo.ts"
+    "demo": "EXTRACTOR=stub tsx evals/demo.ts",
+    "eval:stub": "EXTRACTOR=stub tsx evals/run.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.127.0",

@@ -59,8 +59,16 @@ the dataset images and refuses anything else, and every screen it feeds says so.
 | `/reports` | material in, money out, balances still owed |
 | `/settings` | the yard's materials, prices and check settings |
 
-No Docker needed. There is no hosted demo and no demo video: this repository is the
-whole delivery.
+No Docker needed for that path. To run the image instead:
+
+```bash
+docker compose up --build       # http://localhost:3000, stubbed by default
+ANTHROPIC_API_KEY=sk-... EXTRACTOR= docker compose up --build   # with the model
+```
+
+The container migrates the database and seeds the catalog on first boot; photos
+and the database live in `./data` on the host, so they survive it. There is no
+hosted demo and no demo video: this repository is the whole delivery.
 
 | Command | |
 |---|---|

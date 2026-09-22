@@ -189,11 +189,6 @@ header.app nav a {
   padding-bottom: 2px;
 }
 
-header.app nav a.soon {
-  color: var(--muted);
-  font-weight: 500;
-}
-
 /* --- settings ----------------------------------------------------------- */
 h2.page { font-size: 20px; margin: 0 0 14px; }
 
@@ -366,7 +361,6 @@ button.primary:disabled { background: #b9c6d0; cursor: not-allowed; }
 .filters label { display: flex; flex-direction: column; gap: 4px; font-size: 12px;
                  color: var(--muted); font-weight: 600; }
 .filters input, .filters select { font-size: 14px; padding: 7px 9px; min-width: 150px; }
-.filters small { font-weight: 400; color: var(--muted); max-width: 210px; font-size: 11px; }
 .filter-actions { display: flex; align-items: center; gap: 12px; margin-left: auto; }
 .filter-actions button { padding: 9px 18px; font-size: 14px; }
 .filter-actions .clear { font-size: 13px; color: var(--muted); }

@@ -1,0 +1,16 @@
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      # Set a funded key to read documents with the model; leave EXTRACTOR=stub
+      # to replay the dataset's ground truth instead.
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      EXTRACTOR: ${EXTRACTOR:-stub}
+      DATABASE_URL: file:/app/data/app.db
+      DATA_DIR: /app/data
+    volumes:
+      # Photos and the database live on the host, so they survive the container.
+      # The :z label is for SELinux hosts (Fedora, RHEL); harmless elsewhere.
+      - ./data:/app/data:z

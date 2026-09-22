@@ -4,8 +4,8 @@ import type { Lang, Translate } from "@/lib/i18n";
 
 const NAV = [
   { href: "/capture", key: "nav.capture" },
-  { href: "/review", key: "nav.review", soon: true },
-  { href: "/reports", key: "nav.reports", soon: true },
+  { href: "/review", key: "nav.review" },
+  { href: "/reports", key: "nav.reports" },
   { href: "/settings", key: "nav.settings" },
 ];
 
@@ -21,7 +21,7 @@ export function AppHeader({ lang, t }: { lang: Lang; t: Translate }) {
       </div>
       <nav>
         {NAV.map((item) => (
-          <Link key={item.href} href={item.href} className={item.soon ? "soon" : undefined}>
+          <Link key={item.href} href={item.href}>
             {t(item.key)}
           </Link>
         ))}

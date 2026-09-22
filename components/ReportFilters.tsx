@@ -67,7 +67,6 @@ export function ReportFilters({
             </option>
           ))}
         </select>
-        {counterparties.length === 0 && <small>{t("filters.noCounterparties")}</small>}
       </label>
 
       <div className="filter-actions">

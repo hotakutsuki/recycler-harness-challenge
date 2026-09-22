@@ -1,0 +1,201 @@
+[
+  {
+    "id": "pet",
+    "name": "PET",
+    "unit": "kg",
+    "price": 0.78,
+    "priceMin": 0.4,
+    "priceMax": 0.95,
+    "aliases": [
+      "pet"
+    ],
+    "position": 0
+  },
+  {
+    "id": "perfil",
+    "name": "Perfil",
+    "unit": "kg",
+    "price": 1.4,
+    "priceMin": 1,
+    "priceMax": 1.8,
+    "aliases": [
+      "perfil"
+    ],
+    "position": 1
+  },
+  {
+    "id": "gruesa",
+    "name": "Chatarra gruesa",
+    "unit": "kg",
+    "price": 1.15,
+    "priceMin": 0.8,
+    "priceMax": 1.5,
+    "aliases": [
+      "grues",
+      "gruesa",
+      "gioes"
+    ],
+    "position": 2
+  },
+  {
+    "id": "chatarra",
+    "name": "Chatarra",
+    "unit": "kg",
+    "price": 0.25,
+    "priceMin": 0.15,
+    "priceMax": 0.4,
+    "aliases": [
+      "chat",
+      "chatarra",
+      "chatarrra"
+    ],
+    "position": 3
+  },
+  {
+    "id": "chatarra_fina",
+    "name": "Chatarra fina",
+    "unit": "kg",
+    "price": 0.05,
+    "priceMin": 0.02,
+    "priceMax": 0.12,
+    "aliases": [
+      "chatarra fina",
+      "chat fina",
+      "fina"
+    ],
+    "position": 4
+  },
+  {
+    "id": "cobre",
+    "name": "Cobre",
+    "unit": "kg",
+    "price": 6.1,
+    "priceMin": 4.5,
+    "priceMax": 7.5,
+    "aliases": [
+      "cobre",
+      "cobre 1ra"
+    ],
+    "position": 5
+  },
+  {
+    "id": "bronce",
+    "name": "Bronce",
+    "unit": "kg",
+    "price": 4,
+    "priceMin": 3,
+    "priceMax": 5,
+    "aliases": [
+      "bronce",
+      "bronc"
+    ],
+    "position": 6
+  },
+  {
+    "id": "radiador",
+    "name": "Radiador",
+    "unit": "kg",
+    "price": 0.9,
+    "priceMin": 0.6,
+    "priceMax": 1.2,
+    "aliases": [
+      "radiador",
+      "radeador",
+      "radiador alu"
+    ],
+    "position": 7
+  },
+  {
+    "id": "aro",
+    "name": "Aro",
+    "unit": "kg",
+    "price": 1.2,
+    "priceMin": 0.6,
+    "priceMax": 1.6,
+    "aliases": [
+      "aro",
+      "aros"
+    ],
+    "position": 8
+  },
+  {
+    "id": "fundido",
+    "name": "Fundido",
+    "unit": "kg",
+    "price": 0.15,
+    "priceMin": 0.1,
+    "priceMax": 0.3,
+    "aliases": [
+      "fundido",
+      "fundida"
+    ],
+    "position": 9
+  },
+  {
+    "id": "soplado",
+    "name": "Soplado",
+    "unit": "kg",
+    "price": 0.1,
+    "priceMin": 0.05,
+    "priceMax": 0.25,
+    "aliases": [
+      "soplado",
+      "soplada"
+    ],
+    "position": 10
+  },
+  {
+    "id": "carton",
+    "name": "Cartón",
+    "unit": "kg",
+    "price": 0.1,
+    "priceMin": 0.03,
+    "priceMax": 0.2,
+    "aliases": [
+      "carton",
+      "cart"
+    ],
+    "position": 11
+  },
+  {
+    "id": "papel_mixto",
+    "name": "Papel mixto",
+    "unit": "kg",
+    "price": 0.1,
+    "priceMin": 0.05,
+    "priceMax": 0.6,
+    "aliases": [
+      "papel mixto",
+      "mixto",
+      "minte"
+    ],
+    "position": 12
+  },
+  {
+    "id": "vidrio",
+    "name": "Vidrio",
+    "unit": "kg",
+    "price": 0.03,
+    "priceMin": 0.01,
+    "priceMax": 0.1,
+    "aliases": [
+      "vidrio",
+      "oidrio"
+    ],
+    "position": 13
+  },
+  {
+    "id": "plastico",
+    "name": "Plástico",
+    "unit": "kg",
+    "price": 0.18,
+    "priceMin": 0.05,
+    "priceMax": 0.4,
+    "aliases": [
+      "plastico",
+      "plast",
+      "plastlo"
+    ],
+    "position": 14
+  }
+]

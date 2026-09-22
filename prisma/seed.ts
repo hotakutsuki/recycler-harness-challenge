@@ -43,7 +43,29 @@ async function main() {
   console.log(`catálogo listo: ${count} materiales`);
 }
 
+/**
+ * The container seeds from a JSON copy of this same catalog, because the
+ * runtime image has no TypeScript runner in it. Writing it here keeps the two
+ * from drifting: there is one catalog, and this is its only export.
+ */
+async function writeSeedData() {
+  const fs = await import("node:fs/promises");
+  await fs.writeFile(
+    new URL("./seed-data.json", import.meta.url),
+    JSON.stringify(
+      DEFAULT_CATALOG.map((m, position) => ({
+        id: m.id, name: m.name, unit: m.unit, price: m.price,
+        priceMin: m.priceRange.min, priceMax: m.priceRange.max,
+        aliases: m.aliases, position,
+      })),
+      null,
+      2,
+    ) + "\n",
+  );
+}
+
 main()
+  .then(writeSeedData)
   .catch((error) => {
     console.error(error);
     process.exit(1);
