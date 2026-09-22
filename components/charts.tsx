@@ -19,6 +19,20 @@
 
 const BLUE = "#2a78d6";
 const ORANGE = "#eb6834";
+const GREEN = "#1baf7a";
+const VIOLET = "#4a3aa7";
+
+/**
+ * Four categorical slots, in fixed order, for the share charts.
+ *
+ * Not picked by eye: the skill's validator rejected the default fourth slot
+ * (yellow sat 13.7 from orange under normal vision, below the floor of 15).
+ * Violet in its place clears every check, the worst normal-vision pair being
+ * 16.3 and the worst colour-vision-deficient pair 9.2. Green is under 3:1
+ * against the surface, which is why every slice is directly labelled and the
+ * table below carries the same numbers.
+ */
+const SHARE_COLORS = [BLUE, ORANGE, GREEN, VIOLET];
 const TRACK = "#eceff2";
 const INK = "#1f2933";
 const MUTED = "#5a6878";
@@ -141,5 +155,91 @@ export function StackedDays({
         })}
       </svg>
     </>
+  );
+}
+
+/**
+ * A share of a whole, as a donut.
+ *
+ * Only works because it is capped at four slices: three named plus the rest.
+ * Past that, slices stop being comparable and the chart becomes decoration —
+ * the ranked bars above are the form for comparing thirteen materials. Every
+ * slice is labelled with its share, since colour alone is never identity.
+ */
+export function ShareDonut({
+  data,
+  title,
+  format,
+  otherLabel,
+  emptyLabel,
+}: {
+  data: Slice[];
+  title: string;
+  format: (n: number) => string;
+  otherLabel: string;
+  emptyLabel: string;
+}) {
+  const ranked = [...data].filter((d) => d.value > 0).sort((a, b) => b.value - a.value);
+  const head = ranked.slice(0, 3);
+  const tail = ranked.slice(3);
+  const slices = tail.length
+    ? [...head, { label: otherLabel, value: tail.reduce((s, d) => s + d.value, 0) }]
+    : head;
+
+  const total = slices.reduce((s, d) => s + d.value, 0);
+  if (total <= 0) return <p className="hint">{emptyLabel}</p>;
+
+  const radius = 78;
+  const inner = 46;
+  const cx = 90;
+  const cy = 90;
+  // A 2px gap between slices, so two adjacent fills read as two quantities.
+  const gap = 0.02;
+
+  let angle = -Math.PI / 2;
+  const arcs = slices.map((slice, i) => {
+    const sweep = (slice.value / total) * Math.PI * 2;
+    const start = angle + (slices.length > 1 ? gap / 2 : 0);
+    const end = angle + sweep - (slices.length > 1 ? gap / 2 : 0);
+    angle += sweep;
+
+    const point = (r: number, a: number) => `${cx + r * Math.cos(a)} ${cy + r * Math.sin(a)}`;
+    const large = sweep > Math.PI ? 1 : 0;
+    const d = [
+      `M ${point(radius, start)}`,
+      `A ${radius} ${radius} 0 ${large} 1 ${point(radius, end)}`,
+      `L ${point(inner, end)}`,
+      `A ${inner} ${inner} 0 ${large} 0 ${point(inner, start)}`,
+      "Z",
+    ].join(" ");
+
+    return { ...slice, d, color: SHARE_COLORS[i] ?? VIOLET, share: slice.value / total };
+  });
+
+  const percent = (n: number) => `${Math.round(n * 100)}%`;
+
+  return (
+    <figure className="donut">
+      <figcaption>{title}</figcaption>
+      <div className="donut-body">
+        <svg viewBox="0 0 180 180" role="img" width="180" height="180">
+          {arcs.map((arc) => (
+            <path key={arc.label} d={arc.d} fill={arc.color}>
+              <title>{`${arc.label}: ${format(arc.value)} (${percent(arc.share)})`}</title>
+            </path>
+          ))}
+        </svg>
+        <ul>
+          {arcs.map((arc) => (
+            <li key={arc.label}>
+              <i style={{ background: arc.color }} />
+              <span className="name">{arc.label}</span>
+              <span className="share">{percent(arc.share)}</span>
+              <span className="value">{format(arc.value)}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </figure>
   );
 }

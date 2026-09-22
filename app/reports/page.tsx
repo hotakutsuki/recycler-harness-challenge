@@ -1,5 +1,5 @@
 import { AppHeader } from "@/components/AppHeader";
-import { RankedBars, StackedDays } from "@/components/charts";
+import { RankedBars, ShareDonut, StackedDays } from "@/components/charts";
 import { ReportFilters, type ReportFilter } from "@/components/ReportFilters";
 import { db } from "@/lib/db";
 import { getTranslator } from "@/lib/i18n.server";
@@ -156,6 +156,23 @@ export default async function ReportsPage({
             <section className="panel">
               <h3>{t("reports.materials")}</h3>
               <p className="hint">{t("reports.materials.hint")}</p>
+              <div className="donuts">
+                <ShareDonut
+                  title={t("reports.shareByWeight")}
+                  data={rows.map((r) => ({ label: r.name || t("reports.unknownMaterial"), value: r.quantity }))}
+                  format={(n) => `${number.format(n)} kg`}
+                  otherLabel={t("reports.other")}
+                  emptyLabel={t("reports.noWeights")}
+                />
+                <ShareDonut
+                  title={t("reports.shareByMoney")}
+                  data={rows.map((r) => ({ label: r.name || t("reports.unknownMaterial"), value: r.amount }))}
+                  format={(n) => money.format(n)}
+                  otherLabel={t("reports.other")}
+                  emptyLabel={t("reports.noWeights")}
+                />
+              </div>
+
               <RankedBars
                 data={rows.map((r) => ({ label: r.name || t("reports.unknownMaterial"), value: r.amount }))}
                 format={(n) => money.format(n)}

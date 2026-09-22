@@ -207,8 +207,7 @@ components/               # ui, including <DemoBadge> for mocked screens
 | Context | How | Data |
 |---|---|---|
 | **Reviewers / local dev** | `npm install && npm run dev` with Node 20+ and an `ANTHROPIC_API_KEY`. No Docker required — this is the documented default, because the brief asks for an easy run. | `./data/app.db`, photos in `./data/uploads` |
-| **Production-like check** | `docker compose up`, the same image that would be deployed, with `./data` bind-mounted from the host | Same files, on the host disk |
-| **Production (later)** | The same container on a VPS or Railway / Fly / Render. Not Vercel: serverless has per-request time limits and no persistent disk, and the model calls are long and write files. | Swap Prisma to Postgres; swap the storage implementation to S3 / R2 |
+| **Production (not built)** | A container on a VPS or Railway / Fly / Render. Not Vercel: serverless has per-request time limits and no persistent disk, while the model calls are long and write files. Deliberately out of scope for this slice — there is no Dockerfile in the repo, and claiming one there is not would be the kind of thing this whole design is about not doing. | Swap Prisma to Postgres; swap the storage implementation to S3 / R2 |
 
 Storage sits behind a two-method interface (`save`, `url`) with a local-disk implementation, so moving to object storage is one file. Photos are resized client-side (~1600 px wide) before upload: it does not affect what the model can read, and connections at a yard are slow.
 
