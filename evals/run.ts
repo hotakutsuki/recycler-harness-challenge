@@ -295,6 +295,13 @@ async function main() {
     .sort()
     .map((f) => JSON.parse(fs.readFileSync(path.join(DATASET, f), "utf8")) as GroundTruth);
 
+  if (!usingStub() && !process.env.ANTHROPIC_API_KEY) {
+    console.error(
+      "no ANTHROPIC_API_KEY set. Run `npm run eval:stub` to check the runner, or export a funded key to measure the model.",
+    );
+    process.exit(1);
+  }
+
   const chosen = limit > 0 ? records.slice(0, limit) : records;
   console.log(`evaluating ${chosen.length} documents${usingStub() ? " (stub mode — measures the runner, not the model)" : ""}\n`);
 

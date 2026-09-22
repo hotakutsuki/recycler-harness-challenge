@@ -8,6 +8,7 @@ import { usingStub } from "@/lib/extractor";
 import { check, persist } from "@/lib/pipeline";
 import { describe as describeFlag } from "@/harness/messages";
 import { Document, type Comprobante, type NumberField, type Tarjeta } from "@/harness/schema";
+import type { Disagreement } from "@/harness/reread";
 import type { Flag } from "@/harness/validate";
 import { isBlocking } from "@/harness/validate";
 
@@ -25,45 +26,73 @@ import { isBlocking } from "@/harness/validate";
 
 interface FieldEdit {
   path: string;
-  label: string;
   value: string;
 }
 
 const text = (field: NumberField | null | undefined): string =>
   field == null ? "" : field.legible ? field.raw : "";
 
-/** Every editable number on the document, in the order it is written. */
-function fields(doc: Document, t: Translate): FieldEdit[] {
+/**
+ * Every editable value on the document, in the order it is written on the paper.
+ *
+ * Paths only, no labels: this list is also used inside the server action, and an
+ * inline action can only close over serializable values — a translate function
+ * is not one. Labels are looked up at render time instead.
+ */
+function fields(doc: Document): FieldEdit[] {
   const out: FieldEdit[] = [];
-  out.push({ path: "date_raw", label: t("field.date"), value: doc.date_raw ?? "" });
+  out.push({ path: "date_raw", value: doc.date_raw ?? "" });
 
   if (doc.kind === "tarjeta") {
-    out.push({ path: "card_number", label: t("field.number"), value: doc.card_number ?? "" });
+    out.push({ path: "card_number", value: doc.card_number ?? "" });
     doc.lines.forEach((line, i) => {
-      out.push({ path: `lines.${i}.quantity`, label: t("field.quantity"), value: text(line.quantity) });
-      out.push({ path: `lines.${i}.material_raw`, label: t("field.material"), value: line.material_raw });
-      out.push({ path: `lines.${i}.unit_price`, label: t("field.price"), value: text(line.unit_price) });
-      out.push({ path: `lines.${i}.amount`, label: t("field.amount"), value: text(line.amount) });
+      out.push({ path: `lines.${i}.quantity`, value: text(line.quantity) });
+      out.push({ path: `lines.${i}.material_raw`, value: line.material_raw });
+      out.push({ path: `lines.${i}.unit_price`, value: text(line.unit_price) });
+      out.push({ path: `lines.${i}.amount`, value: text(line.amount) });
     });
   } else {
-    out.push({ path: "receipt_number", label: t("field.number"), value: doc.receipt_number ?? "" });
-    out.push({ path: "material_raw", label: t("field.material"), value: doc.material_raw ?? "" });
-    out.push({ path: "weighing.gross", label: t("field.gross"), value: text(doc.weighing.gross) });
-    out.push({ path: "weighing.tare", label: t("field.tare"), value: text(doc.weighing.tare) });
-    out.push({ path: "weighing.net", label: t("field.net"), value: text(doc.weighing.net) });
+    out.push({ path: "receipt_number", value: doc.receipt_number ?? "" });
+    out.push({ path: "material_raw", value: doc.material_raw ?? "" });
+    out.push({ path: "weighing.gross", value: text(doc.weighing.gross) });
+    out.push({ path: "weighing.tare", value: text(doc.weighing.tare) });
+    out.push({ path: "weighing.net", value: text(doc.weighing.net) });
     doc.weighing.deductions.forEach((d, i) => {
-      out.push({ path: `weighing.deductions.${i}.amount`, label: t("field.deduction"), value: text(d.amount) });
-      out.push({ path: `weighing.deductions.${i}.reason`, label: t("field.reason"), value: d.reason ?? "" });
+      out.push({ path: `weighing.deductions.${i}.amount`, value: text(d.amount) });
+      out.push({ path: `weighing.deductions.${i}.reason`, value: d.reason ?? "" });
     });
-    out.push({ path: "weighing.final_net", label: t("field.finalNet"), value: text(doc.weighing.final_net) });
+    out.push({ path: "weighing.final_net", value: text(doc.weighing.final_net) });
   }
 
-  out.push({ path: "settlement.total", label: t("field.total"), value: text(doc.settlement.total) });
-  doc.settlement.payments.forEach((p, i) => {
-    out.push({ path: `settlement.payments.${i}.amount`, label: t("field.payment", { kind: p.kind }), value: text(p.amount) });
+  out.push({ path: "settlement.total", value: text(doc.settlement.total) });
+  doc.settlement.payments.forEach((payment, i) => {
+    out.push({ path: `settlement.payments.${i}.amount`, value: text(payment.amount) });
   });
-  out.push({ path: "settlement.owed", label: t("field.owed"), value: text(doc.settlement.owed) });
+  out.push({ path: "settlement.owed", value: text(doc.settlement.owed) });
   return out;
+}
+
+/** The label a field wears on screen, derived from its path. */
+function labelFor(path: string, t: Translate): string {
+  const key = path.split(".").pop()!;
+  const labels: Record<string, string> = {
+    date_raw: "field.date",
+    card_number: "field.number",
+    receipt_number: "field.number",
+    quantity: "field.quantity",
+    material_raw: "field.material",
+    unit_price: "field.price",
+    amount: path.startsWith("weighing.deductions") ? "field.deduction" : "field.amount",
+    gross: "field.gross",
+    tare: "field.tare",
+    net: "field.net",
+    final_net: "field.finalNet",
+    reason: "field.reason",
+    total: "field.total",
+    owed: "field.owed",
+  };
+  if (path.startsWith("settlement.payments")) return t("field.payment", { kind: "" }).trim();
+  return t(labels[key] ?? key);
 }
 
 const parseWritten = (raw: string): number | null => {
@@ -127,6 +156,9 @@ export default async function ReviewPage({
     ? (JSON.parse(sheet.correctedExtraction) as Document)
     : raw;
   const flags: Flag[] = sheet.flags ? (JSON.parse(sheet.flags) as Flag[]) : [];
+  const diffs: Disagreement[] = sheet.secondDiffs
+    ? (JSON.parse(sheet.secondDiffs) as Disagreement[])
+    : [];
 
   async function save(formData: FormData) {
     "use server";
@@ -142,43 +174,56 @@ export default async function ReviewPage({
     for (const [key, value] of formData.entries()) {
       if (!key.startsWith("f.") || typeof value !== "string") continue;
       const path = key.slice(2);
-      const before = fields(previous, t).find((f) => f.path === path)?.value ?? "";
+      const before = fields(previous).find((f) => f.path === path)?.value ?? "";
       if (before === value) continue;
       applyEdit(edited, path, value);
       corrections.push({ field: path, from: before, to: value });
     }
 
     const { normalized, flags: newFlags } = await check(edited, id);
-    const committing = formData.get("action") === "confirmar";
+    const action = formData.get("action");
+    const reason = String(formData.get("reason") ?? "").trim();
+
+    // A document reaches the ledger one of two ways: every check passes, or a
+    // person takes responsibility for one that never will. The second case is
+    // not an edge case — a sheet whose own arithmetic is wrong in ink can be
+    // recorded but not fixed, and without this it would sit in the inbox for
+    // ever. It costs a written reason, kept with the sheet.
+    const accepting = action === "accept" && reason.length > 0;
+    const committing = action === "commit" || accepting;
 
     if (committing) await persist(id, normalized);
+
+    const audit = corrections.map((c) => ({
+      field: c.field,
+      fromValue: c.from,
+      toValue: c.to,
+      user: "counter",
+    }));
+    if (accepting) {
+      audit.push({
+        field: "accepted",
+        fromValue: newFlags.filter((f) => f.severity === "blocking").map((f) => f.code).join(", "),
+        toValue: reason,
+        user: "counter",
+      });
+    }
 
     await db.sheet.update({
       where: { id },
       data: {
         correctedExtraction: JSON.stringify(edited),
         flags: JSON.stringify(newFlags),
-        status: committing
-          ? "committed"
-          : isBlocking(newFlags)
-            ? "needs_review"
-            : "ready",
+        status: committing ? "committed" : isBlocking(newFlags) ? "needs_review" : "ready",
         committedAt: committing ? new Date() : null,
-        corrections: {
-          create: corrections.map((c) => ({
-            field: c.field,
-            fromValue: c.from,
-            toValue: c.to,
-            user: "counter",
-          })),
-        },
+        corrections: { create: audit },
       },
     });
 
     redirect(`/review/${id}?saved=1`);
   }
 
-  const editable = current ? fields(current, t) : [];
+  const editable = current ? fields(current) : [];
   const blocking = flags.filter((f) => f.severity === "blocking");
   const warnings = flags.filter((f) => f.severity === "warning");
 
@@ -202,6 +247,21 @@ export default async function ReviewPage({
 
             {sheet.status === "failed" && <p className="error">{sheet.error}</p>}
 
+            {sheet.secondAgreed != null && (
+              <p className={`second ${sheet.secondAgreed ? "agreed" : "differs"}`}>
+                {sheet.secondAgreed ? t("review.secondAgreed") : t("review.secondDiffers")}
+                {diffs.length > 0 && (
+                  <span className="diffs">
+                    {diffs.map((d) => (
+                      <em key={d.path}>
+                        {d.path}: {d.first} / {d.second}
+                      </em>
+                    ))}
+                  </span>
+                )}
+              </p>
+            )}
+
             {flags.length > 0 && (
               <ul className="flags">
                 {[...blocking, ...warnings].map((flag, i) => {
@@ -222,7 +282,7 @@ export default async function ReviewPage({
                   <tbody>
                     {editable.map((field) => (
                       <tr key={field.path}>
-                        <th>{field.label}</th>
+                        <th>{labelFor(field.path, t)}</th>
                         <td>
                           <input name={`f.${field.path}`} defaultValue={field.value} />
                         </td>
@@ -245,7 +305,18 @@ export default async function ReviewPage({
                     {t("review.commit")}
                   </button>
                 </div>
-                {blocking.length > 0 && <p className="hint">{t("review.blocked")}</p>}
+                {blocking.length > 0 && (
+                  <div className="accept">
+                    <p className="hint">{t("review.blocked")}</p>
+                    <label>
+                      <span>{t("review.acceptReason")}</span>
+                      <input name="reason" placeholder={t("review.acceptPlaceholder")} />
+                    </label>
+                    <button type="submit" name="action" value="accept" className="secondary">
+                      {t("review.accept")}
+                    </button>
+                  </div>
+                )}
               </form>
             )}
 

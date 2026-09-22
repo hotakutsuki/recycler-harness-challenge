@@ -32,6 +32,15 @@ async function main() {
     process.exit(1);
   }
 
+  // Fail once, up front, instead of twenty-seven times in a row: without a key
+  // and without the stub there is nothing this can do.
+  if (!usingStub() && !process.env.ANTHROPIC_API_KEY) {
+    console.error(
+      "no ANTHROPIC_API_KEY set. Run `npm run demo` (stubbed) or export a funded key first.",
+    );
+    process.exit(1);
+  }
+
   const files = fs.readdirSync(PHOTOS).filter((f) => f.endsWith(".jpeg")).sort();
   const chosen = limit > 0 ? files.slice(0, limit) : files;
 

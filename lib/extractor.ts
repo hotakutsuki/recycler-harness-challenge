@@ -65,7 +65,10 @@ export async function extractDocument(
   image: Buffer,
   mediaType: "image/jpeg" | "image/png" | "image/webp",
   config: Config,
+  focus?: string,
 ): Promise<ExtractionResult> {
+  // The stub replays one fixed reading, so a second pass against it always
+  // agrees. That is not evidence of anything, and the review screen says so.
   if (usingStub()) return stubExtract(image);
-  return extract(image, mediaType, config);
+  return extract(image, mediaType, config, focus ? { focus } : {});
 }

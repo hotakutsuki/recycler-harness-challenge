@@ -28,6 +28,13 @@ model Sheet {
   /// touched: keeping both is what lets us measure the harness on real paper,
   /// and what makes the audit trail mean anything.
   correctedExtraction String?
+  /// The independent second reading, taken only when something blocking is
+  /// open, and what it concluded. `secondAgreed = true` means both passes read
+  /// the same thing, so the error is probably on the paper rather than in the
+  /// reading — which is what a reviewer needs to know before they start looking.
+  secondExtraction String?
+  secondAgreed     Boolean?
+  secondDiffs      String?
   error         String?
   createdAt     DateTime  @default(now())
   committedAt   DateTime?

@@ -1,7 +1,8 @@
 import { contentType, read } from "./storage";
 import { db } from "./db";
-import { extractDocument } from "./extractor";
+import { extractDocument, usingStub } from "./extractor";
 import { check, loadConfig, persist } from "./pipeline";
+import { reread } from "@/harness/reread";
 import { isBlocking } from "@/harness/validate";
 
 /**
@@ -55,12 +56,30 @@ async function process_(sheetId: string): Promise<void> {
     const { normalized, flags } = await check(document, sheetId, config);
     await persist(sheetId, normalized);
 
+    // Only a blocking flag earns a second model call. Warnings are for a human
+    // to glance at, and re-reading every document with a slightly odd price
+    // would double the bill for nothing.
+    const second = usingStub()
+      ? { focus: null, agreed: true, disagreements: [], second: null }
+      : await reread(document, flags, async (focus) => {
+          const again = await extractDocument(
+            image,
+            contentType(sheet.photoPath) as "image/jpeg",
+            config,
+            focus,
+          );
+          return again.document;
+        });
+
     await db.sheet.update({
       where: { id: sheetId },
       data: {
         status: isBlocking(flags) ? "needs_review" : "ready",
         rawExtraction: JSON.stringify(document),
         flags: JSON.stringify(flags),
+        secondExtraction: second.second ? JSON.stringify(second.second) : null,
+        secondAgreed: second.focus ? second.agreed : null,
+        secondDiffs: second.disagreements.length ? JSON.stringify(second.disagreements) : null,
         error: null,
       },
     });

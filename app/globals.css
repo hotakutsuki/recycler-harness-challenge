@@ -384,3 +384,17 @@ button.primary:disabled { background: #b9c6d0; cursor: not-allowed; }
 .donut .name { color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .donut .share { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
 .donut .value { color: var(--muted); font-variant-numeric: tabular-nums; }
+
+/* --- second reading and acceptance -------------------------------------- */
+.second { font-size: 13.5px; padding: 10px 14px; border-radius: 0 8px 8px 0; margin: 0 0 14px; }
+.second.agreed { background: #eef2f6; border-left: 4px solid var(--accent); }
+.second.differs { background: #fff4d6; border-left: 4px solid var(--warn); }
+.second .diffs { display: block; margin-top: 6px; }
+.second em { display: block; font-style: normal; font-variant-numeric: tabular-nums; font-size: 13px; }
+
+.accept { margin-top: 14px; padding: 12px 14px; background: #fafbfc; border: 1px solid var(--line);
+          border-radius: 10px; display: flex; flex-direction: column; gap: 10px; }
+.accept .hint { margin: 0; }
+.accept label { display: flex; flex-direction: column; gap: 4px; font-size: 12px;
+                color: var(--muted); font-weight: 600; }
+.accept button { align-self: flex-start; padding: 10px 18px; font-size: 14px; }
