@@ -58,6 +58,11 @@ export interface Config {
   settlementEpsilon: number;
   /** Slack on weight comparisons, in the document's own unit. */
   weightEpsilon: number;
+  /**
+   * How old a document may be before it is worth a second look, in months.
+   * Guards against a misread year, which every arithmetic check would pass.
+   */
+  staleDateMonths: number;
   /** Band for the implied price on a comprobante, where no unit price is written. */
   bulkPriceRange: { min: number; max: number };
   currency: string;
@@ -89,6 +94,7 @@ export const DEFAULT_CONFIG: Config = {
   cashRounding: 0.05,
   amountEpsilon: 0.051,
   settlementEpsilon: 1.0,
+  staleDateMonths: 18,
   weightEpsilon: 0.5,
   // Every truck load in the sample settled between 0,20 and 0,26 per unit.
   bulkPriceRange: { min: 0.12, max: 0.45 },

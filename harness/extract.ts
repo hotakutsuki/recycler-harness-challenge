@@ -23,59 +23,75 @@ import { Document } from "./schema";
  * the only place the two shapes meet.
  */
 
+/**
+ * A number on the wire, with no nullable fields anywhere.
+ *
+ * Structured outputs cap how many union-typed parameters a schema may have (16;
+ * the nullable-everything version of this schema had 20 and was rejected). The
+ * fix turned out to be better than what it replaced: instead of `value: number
+ * | null` plus a boolean, a field declares its state outright. "Absent" and
+ * "illegible" are genuinely different facts about a document — one says the
+ * paper has no such value, the other says it has one and nobody can read it —
+ * and the old shape asked the model to express that difference through a null.
+ */
 const WireNumber = z.object({
+  /** The characters as written. Empty when the state is not "read". */
   raw: z.string(),
-  value: z.number().nullable(),
-  legible: z.boolean(),
-  replaces: z.string().nullable(),
+  /** The parsed number. Ignored unless the state is "read". */
+  value: z.number(),
+  state: z.enum(["read", "absent", "illegible"]),
+  /** The crossed-out text this value replaces, or empty. */
+  replaces: z.string(),
 });
 
+/**
+ * Every field is always present; an empty string means the document does not
+ * have it. No nulls, no unions — see WireNumber above for why.
+ */
 const WireDocument = z.object({
   kind: z.enum(["tarjeta", "comprobante"]),
   /** Card number on a tarjeta, receipt number on a comprobante. */
-  folio: z.string().nullable(),
-  date_raw: z.string().nullable(),
-  counterparty: z.string().nullable(),
+  folio: z.string(),
+  date_raw: z.string(),
+  counterparty: z.string(),
 
   /** Comprobante only: the material of the whole load. */
-  material_raw: z.string().nullable(),
-  plate: z.string().nullable(),
-  observations: z.string().nullable(),
+  material_raw: z.string(),
+  plate: z.string(),
+  observations: z.string(),
 
   /** Tarjeta only; empty on a comprobante. */
   lines: z.array(
     z.object({
       index: z.number().int(),
-      quantity: WireNumber.nullable(),
+      quantity: WireNumber,
       material_raw: z.string(),
-      unit_price: WireNumber.nullable(),
-      amount: WireNumber.nullable(),
-      note: z.string().nullable(),
+      unit_price: WireNumber,
+      amount: WireNumber,
+      note: z.string(),
     }),
   ),
 
-  /** Comprobante only; all-null on a tarjeta. */
+  /** Comprobante only; all "absent" on a tarjeta. */
   weighing: z.object({
-    gross: WireNumber.nullable(),
-    tare: WireNumber.nullable(),
-    net: WireNumber.nullable(),
-    unit: z.enum(["kg", "lb", "qq", "t"]).nullable(),
-    deductions: z.array(
-      z.object({ amount: WireNumber.nullable(), reason: z.string().nullable() }),
-    ),
-    final_net: WireNumber.nullable(),
+    gross: WireNumber,
+    tare: WireNumber,
+    net: WireNumber,
+    unit: z.enum(["kg", "lb", "qq", "t", "unstated"]),
+    deductions: z.array(z.object({ amount: WireNumber, reason: z.string() })),
+    final_net: WireNumber,
   }),
 
   settlement: z.object({
-    total: WireNumber.nullable(),
+    total: WireNumber,
     payments: z.array(
       z.object({
         kind: z.enum(["efectivo", "abono", "transferencia", "debe", "otro"]),
-        amount: WireNumber.nullable(),
+        amount: WireNumber,
         raw: z.string(),
       }),
     ),
-    owed: WireNumber.nullable(),
+    owed: WireNumber,
   }),
 
   notes: z.array(z.string()),
@@ -83,16 +99,47 @@ const WireDocument = z.object({
 
 export type WireDocument = z.infer<typeof WireDocument>;
 
+type Wire = z.infer<typeof WireNumber>;
+
+/** Wire state to the domain's shape: absent becomes null, illegible keeps the
+ *  field but refuses a value. */
+const field = (w: Wire) =>
+  w.state === "absent"
+    ? null
+    : {
+        raw: w.raw,
+        value: w.state === "read" ? w.value : null,
+        legible: w.state === "read",
+        replaces: w.replaces === "" ? null : w.replaces,
+      };
+
+const text = (s: string) => (s.trim() === "" ? null : s);
+
 export function toDocument(wire: WireDocument): Document {
-  const settlement = wire.settlement;
+  const settlement = {
+    total: field(wire.settlement.total),
+    payments: wire.settlement.payments.map((p) => ({
+      kind: p.kind,
+      amount: field(p.amount),
+      raw: p.raw,
+    })),
+    owed: field(wire.settlement.owed),
+  };
 
   if (wire.kind === "tarjeta") {
     return Document.parse({
       kind: "tarjeta",
-      card_number: wire.folio,
-      date_raw: wire.date_raw,
-      counterparty: wire.counterparty,
-      lines: wire.lines.map((l, i) => ({ ...l, index: l.index || i + 1 })),
+      card_number: text(wire.folio),
+      date_raw: text(wire.date_raw),
+      counterparty: text(wire.counterparty),
+      lines: wire.lines.map((l, i) => ({
+        index: l.index || i + 1,
+        quantity: field(l.quantity),
+        material_raw: l.material_raw,
+        unit_price: field(l.unit_price),
+        amount: field(l.amount),
+        note: text(l.note),
+      })),
       settlement,
       notes: wire.notes,
     });
@@ -100,13 +147,23 @@ export function toDocument(wire: WireDocument): Document {
 
   return Document.parse({
     kind: "comprobante",
-    receipt_number: wire.folio,
-    date_raw: wire.date_raw,
-    counterparty: wire.counterparty,
-    material_raw: wire.material_raw,
-    plate: wire.plate,
-    observations: wire.observations,
-    weighing: wire.weighing,
+    receipt_number: text(wire.folio),
+    date_raw: text(wire.date_raw),
+    counterparty: text(wire.counterparty),
+    material_raw: text(wire.material_raw),
+    plate: text(wire.plate),
+    observations: text(wire.observations),
+    weighing: {
+      gross: field(wire.weighing.gross),
+      tare: field(wire.weighing.tare),
+      net: field(wire.weighing.net),
+      unit: wire.weighing.unit === "unstated" ? null : wire.weighing.unit,
+      deductions: wire.weighing.deductions.map((d) => ({
+        amount: field(d.amount),
+        reason: text(d.reason),
+      })),
+      final_net: field(wire.weighing.final_net),
+    },
     settlement,
     notes: wire.notes,
   });

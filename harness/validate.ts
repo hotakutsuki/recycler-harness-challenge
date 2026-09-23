@@ -23,6 +23,7 @@ export type FlagCode =
   | "V7" // implausible date or weight
   | "V8" // possible duplicate
   | "V9" // illegible field
+  | "V10" // a total with nothing weighed to back it
   | "PRECIO"; // price outside the band this material trades in
 
 export type Severity = "blocking" | "warning";
@@ -209,12 +210,37 @@ export function validate(
 
   if (doc.dateIso == null) {
     add("V7", "blocking", { field: "date" });
-  } else if (new Date(doc.dateIso + "T00:00:00Z").getTime() > today.getTime()) {
-    add("V7", "warning", { field: "date", date: doc.dateIso });
+  } else {
+    const date = new Date(doc.dateIso + "T00:00:00Z").getTime();
+    const months = (today.getTime() - date) / (30 * 24 * 60 * 60 * 1000);
+    if (months < 0) {
+      add("V7", "warning", { field: "date", date: doc.dateIso });
+    } else if (months > config.staleDateMonths) {
+      // A misread year is invisible to every other check — 2016 for 2026 adds
+      // up perfectly — and it files the purchase in a year nobody will look at.
+      // The model did misread one, and said so in its own notes; nothing else
+      // here would have noticed.
+      add("V7", "warning", { field: "oldDate", date: doc.dateIso, months: Math.round(months) });
+    }
   }
 
   if (doc.illegibleFields > 0 && !flags.some((f) => f.code === "V9")) {
     add("V9", "blocking", { field: "weights" });
+  }
+
+  // V10 — a total with nothing measured behind it. On a tarjeta every line has
+  // a quantity; on a comprobante there is a weight. A document that says money
+  // changed hands but records nothing weighed is either badly read or badly
+  // written, and either way somebody has to look at the paper.
+  const measured =
+    doc.lines.some((l) => l.quantity != null) ||
+    (truck != null &&
+      [truck.gross, truck.tare, truck.net, truck.finalNet].some((w) => w != null));
+  // An illegible weight is still a weight: V9 already sends that document to a
+  // person, and two flags for one problem trains people to skim them.
+  const somethingUnreadable = doc.illegibleFields > 0 || doc.lines.some((l) => l.illegible);
+  if (doc.settlement.total != null && !measured && !somethingUnreadable) {
+    add("V10", "blocking", { total: round2(doc.settlement.total) });
   }
 
   // V8 — the folio is pre-printed and never repeats, so the same number twice is

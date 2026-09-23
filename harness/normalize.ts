@@ -70,7 +70,13 @@ const val = (f: NumberField | null | undefined): number | null =>
 const unreadable = (...fields: (NumberField | null | undefined)[]): boolean =>
   fields.some((f) => f != null && !f.legible);
 
-/** Lowercase, strip accents and punctuation, collapse spaces: "Chat. Liv." -> "chat liv". */
+/** Words that join a quantity to its material on these cards and mean nothing:
+ *  "98 de Pet", "2 ff de fundido". Stripped before matching so the catalog does
+ *  not have to carry an alias for every phrasing. */
+const CONNECTORS = new Set(["de", "del", "d"]);
+
+/** Lowercase, strip accents and punctuation, drop a leading connector:
+ *  "de Pet" -> "pet", "Chat. Liv." -> "chat liv". */
 export function fold(text: string): string {
   return text
     .normalize("NFD")
@@ -78,7 +84,10 @@ export function fold(text: string): string {
     .toLowerCase()
     .replace(/[^a-z0-9\s]/g, " ")
     .replace(/\s+/g, " ")
-    .trim();
+    .trim()
+    .split(" ")
+    .filter((word, i) => !(i === 0 && CONNECTORS.has(word)))
+    .join(" ");
 }
 
 function distance(a: string, b: string): number {

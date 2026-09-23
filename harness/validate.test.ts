@@ -219,6 +219,24 @@ describe("documents that are wrong must be caught", () => {
     expect(check(doc)).toEqual(["V9:1"]);
   });
 
+  it("a total with nothing weighed behind it", () => {
+    // Receipt 015635 read this way: the model returned the total and left the
+    // "160 kg" on the paper out entirely. Every arithmetic check passed.
+    const doc = comprobante({ settlement: { total: n("40,00", 40), payments: [], owed: null } });
+    expect(check(doc)).toContain("V10");
+  });
+
+  it("a year that reads a decade off", () => {
+    // 18/09/2016 for 18/09/2026: every sum still adds up, and the purchase
+    // lands in a year nobody will ever look at.
+    const doc = comprobante({
+      date_raw: "18/09/2016",
+      weighing: { gross: n("1000", 1000), tare: n("800", 800), net: n("200", 200), unit: null, deductions: [], final_net: null },
+      settlement: { total: n("50", 50), payments: [], owed: null },
+    });
+    expect(check(doc)).toContain("V7");
+  });
+
   it("a price outside the band the material trades in", () => {
     const doc = tarjeta({
       lines: [
@@ -245,6 +263,13 @@ describe("documents that are wrong must be caught", () => {
 
 describe("material resolution", () => {
   const { materials } = DEFAULT_CONFIG;
+
+  it("ignores the word that joins a quantity to its material", () => {
+    // The card says "98 de Pet". The "de" belongs to the sentence, not the
+    // material, and the catalog should not need an alias for every phrasing.
+    expect(resolveMaterial("de Pet", materials).material?.id).toBe("pet");
+    expect(resolveMaterial("de fundido", materials).material?.id).toBe("fundido");
+  });
 
   it("matches what the weigher actually writes", () => {
     expect(resolveMaterial("Pet", materials).material?.id).toBe("pet");

@@ -12,24 +12,33 @@ import type { Flag } from "./validate";
  * the alarm for that.
  */
 
-const n = (raw: string, value: number, replaces: string | null = null) => ({
+const n = (raw: string, value: number, replaces = "") => ({
   raw,
   value,
-  legible: true,
+  state: "read" as const,
   replaces,
 });
+/** A field the document simply does not have. */
+const absent = { raw: "", value: 0, state: "absent" as const, replaces: "" };
 
 const wire = (over: Partial<WireDocument> = {}): WireDocument => ({
   kind: "tarjeta",
   folio: "2784",
   date_raw: "18/09/2026",
-  counterparty: null,
-  material_raw: null,
-  plate: null,
-  observations: null,
+  counterparty: "",
+  material_raw: "",
+  plate: "",
+  observations: "",
   lines: [],
-  weighing: { gross: null, tare: null, net: null, unit: null, deductions: [], final_net: null },
-  settlement: { total: null, payments: [], owed: null },
+  weighing: {
+    gross: absent,
+    tare: absent,
+    net: absent,
+    unit: "unstated",
+    deductions: [],
+    final_net: absent,
+  },
+  settlement: { total: absent, payments: [], owed: absent },
   notes: [],
   ...over,
 });
@@ -53,7 +62,7 @@ describe("the wire format to the domain model", () => {
             material_raw: "Pet",
             unit_price: n("0,78", 0.78),
             amount: n("76,40", 76.4),
-            note: null,
+            note: "",
           },
         ],
         settlement: {
@@ -82,11 +91,11 @@ describe("the wire format to the domain model", () => {
           gross: n("5910", 5910),
           tare: n("4030", 4030),
           net: n("1880", 1880),
-          unit: null,
+          unit: "unstated",
           deductions: [{ amount: n("80", 80), reason: "3 perfil lavadora" }],
           final_net: n("1800", 1800),
         },
-        settlement: { total: n("450", 450, "300"), payments: [], owed: null },
+        settlement: { total: n("450", 450, "300"), payments: [], owed: absent },
       }),
     );
 
@@ -103,8 +112,8 @@ describe("the wire format to the domain model", () => {
     const doc = toDocument(
       wire({
         lines: [
-          { index: 0, quantity: null, material_raw: "Pet", unit_price: null, amount: null, note: null },
-          { index: 0, quantity: null, material_raw: "cobre", unit_price: null, amount: null, note: null },
+          { index: 0, quantity: absent, material_raw: "Pet", unit_price: absent, amount: absent, note: "" },
+          { index: 0, quantity: absent, material_raw: "cobre", unit_price: absent, amount: absent, note: "" },
         ],
       }),
     );
@@ -157,10 +166,10 @@ describe("comparing the two readings", () => {
             material_raw: "Pet",
             unit_price: n("0,78", 0.78),
             amount: n(amount, value),
-            note: null,
+            note: "",
           },
         ],
-        settlement: { total: n(amount, value), payments: [], owed: null },
+        settlement: { total: n(amount, value), payments: [], owed: absent },
       }),
     );
 

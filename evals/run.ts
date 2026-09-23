@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { DEFAULT_CONFIG } from "../harness/catalog";
 import { extractDocument } from "../lib/extractor";
-import { normalize } from "../harness/normalize";
+import { normalize, parseDate } from "../harness/normalize";
 import { Document, type NumberField } from "../harness/schema";
 import { validate, isBlocking, type Flag } from "../harness/validate";
 import { usingStub } from "../lib/extractor";
@@ -59,7 +59,17 @@ function flatten(doc: Document): Map<string, Field> {
     out.set(path, { path, raw: value, value: null, legible: true, replaces: null });
   };
 
-  text("date", doc.date_raw);
+  // Compared as a date, not as text: "18/9/2026" and "18/09/2026" are the same
+  // day written two ways, and counting that as an error would hide the real
+  // ones behind noise.
+  const iso = parseDate(doc.date_raw);
+  out.set("date", {
+    path: "date",
+    raw: iso ?? doc.date_raw ?? "",
+    value: null,
+    legible: true,
+    replaces: null,
+  });
 
   if (doc.kind === "tarjeta") {
     text("folio", doc.card_number);
@@ -121,7 +131,10 @@ interface DocResult {
   corrections: { total: number; right: number };
   flagsTruth: string[];
   flagsGot: string[];
+  /** Wrong, and nothing at all was raised: nobody would ever look. */
   silent: boolean;
+  /** Wrong, and nothing blocking: a person sees a warning but can still commit. */
+  committable: boolean;
   seconds: number;
   tokens: { input: number; output: number };
   error?: string;
@@ -142,6 +155,7 @@ async function evaluate(record: GroundTruth): Promise<DocResult> {
     flagsTruth: truthFlags,
     flagsGot: [],
     silent: false,
+    committable: false,
     seconds: 0,
     tokens: { input: 0, output: 0 },
   };
@@ -193,8 +207,11 @@ async function evaluate(record: GroundTruth): Promise<DocResult> {
     wrongFields,
     corrections: { total: correctionsTotal, right: correctionsRight },
     flagsGot: gotFlags.map((f) => f.code),
-    // The headline: something is wrong and nothing stops it being committed.
-    silent: wrong > 0 && !isBlocking(gotFlags),
+    // The headline: something is wrong and nothing was raised at all.
+    silent: wrong > 0 && gotFlags.length === 0,
+    // Softer, still worth knowing: a warning was raised, so it is visible, but
+    // nothing stops the document reaching the ledger.
+    committable: wrong > 0 && gotFlags.length > 0 && !isBlocking(gotFlags),
     seconds,
     tokens: { input: got.usage.inputTokens, output: got.usage.outputTokens },
   };
@@ -207,6 +224,7 @@ function markdown(results: DocResult[]): string {
   const fields = sum((r) => r.counts.match + r.counts.wrong + r.counts.missed + r.counts.invented);
   const matched = sum((r) => r.counts.match);
   const silent = ok.filter((r) => r.silent);
+  const committable = ok.filter((r) => r.committable);
   const corrections = sum((r) => r.corrections.total);
   const correctionsRight = sum((r) => r.corrections.right);
 
@@ -238,7 +256,8 @@ function markdown(results: DocResult[]): string {
     "",
     "| | |",
     "|---|---|",
-    `| **Silent error rate** — a wrong value with nothing flagged | **${pct(silent.length, ok.length)}** (${silent.length} of ${ok.length}) |`,
+    `| **Silent error rate** — a wrong value and no flag at all | **${pct(silent.length, ok.length)}** (${silent.length} of ${ok.length}) |`,
+    `| Wrong, but only a warning — visible, still committable | ${pct(committable.length, ok.length)} (${committable.length} of ${ok.length}) |`,
     `| Field accuracy | ${pct(matched, fields)} (${matched} of ${fields}) |`,
     `| Document type read correctly | ${pct(ok.filter((r) => r.kindCorrect).length, ok.length)} |`,
     `| Crossed-out values read as the correction | ${pct(correctionsRight, corrections)} (${correctionsRight} of ${corrections}) |`,
