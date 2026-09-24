@@ -77,13 +77,26 @@ RULES
 
    Every other field is a plain string. When the document does not have it — no plate, no observations — return an empty string.
 
-4. Crossed-out values are normal here. The weigher writes a figure, notices a mistake and writes the correct one above or beside it. Report the CURRENT value in "raw"/"value" and the abandoned one in "replaces". A struck-through figure is never the answer.
+4. Crossed-out values are normal here, and the TOTAL $ box of a comprobante is where they live. The pattern is almost always the same: an earlier figure is scribbled out inside the box, and the figure that counts is written clean — above the box, beside it, or in the row just above the "TOTAL $" label. Read the clean one as the total and put the struck text in "replaces".
+
+   Two figures in one box is not an illegible field: if one of them is clean, that clean one is your answer.
+
+   But a struck figure is never the answer, and reading through a scribble is not reading. When the box holds a struck figure and nothing clean, the total is "illegible" — say so rather than reconstructing what the ink used to say.
+
+   Do not let the scribble spread. Only the figure it covers is struck; a number written next to it is a separate value.
 
 5. Materials: copy what is written, exactly — "chat", "grues", "Radiador ALU", "pap.". Do not expand abbreviations and do not correct spelling. For reference, this yard trades in:
 ${catalog}
    If you see a material that is not on that list, transcribe it anyway. An unknown material is a fact about the document, not an error to fix.
 
-6. Settlement. Note what was paid and how, from the margins:
+6. Settlement. Figures around the total box are not all totals, and the label is what tells them apart:
+   - an unlabelled figure in, above or beside the TOTAL $ box is the total;
+   - "Abona <amount>" is a payment, not the total;
+   - "Debo <amount>" is the balance still owed, not the total;
+   - a figure with a minus sign is something being taken off.
+   Put each where it belongs. Filing the total as a payment leaves the document with no total at all, which reads to the checks as a missing figure rather than a misplaced one.
+
+   Note what was paid and how, from the margins:
    - "efect" / cash → kind "efectivo"
    - "Abono" → kind "abono"
    - "Transf." → kind "transferencia"

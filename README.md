@@ -134,11 +134,11 @@ truth. Full detail, field by field, in [`evals/REPORT.md`](./evals/REPORT.md).
 | | |
 |---|---|
 | **Silent error rate** — a wrong value with no flag at all | **3.7 %** (1 of 27) |
-| Wrong, but only a warning — visible, still committable | 3.7 % (1 of 27) |
-| Field accuracy | 94.5 % (258 of 273) |
+| Wrong, but only a warning — visible, still committable | 14.8 % (4 of 27) |
+| Field accuracy | 94.2 % (258 of 274) |
 | Document type read correctly | 100 % |
-| Crossed-out values read as the correction | 71.4 % (10 of 14) |
-| Time per document | 18.5 s · ~5,900 input tokens |
+| Crossed-out values read as the correction | 84.6 % (11 of 13) |
+| Time per document | 17.7 s · ~6,300 input tokens |
 
 The model misreads things. That is expected and it is the reason the checks exist: of
 the 15 fields it got wrong, 14 raised something a person has to look at. The one that
@@ -147,9 +147,14 @@ that no arithmetic can catch. The check written for exactly that case (comparing
 receipt's date against the folios either side) needed two neighbouring receipts and had
 only one at that point in the run.
 
-**The weakest number is the crossed-out one.** In four of fourteen corrected values the
-model returned the abandoned figure rather than the correction. On this paper a struck
-total is routine, so that is the next thing to work on.
+**The crossed-out number was worth chasing.** It started at 71 % and the failures were
+not what the name suggests: the model was not reading the struck figure, it was calling
+the whole box illegible, and twice it read the figure correctly but filed it as a
+payment. Describing the actual layout of these receipts — the superseded figure
+scribbled inside the TOTAL box, the one that counts written clean above or beside it —
+took it to 85 %. The opposite failure appeared immediately and had to be fenced off:
+told to prefer the clean figure, it began reconstructing what the ink under a scribble
+used to say. Reading through a scribble is not reading, and the prompt now says so.
 
 Three of the checks in this repository exist because of what this run exposed: a year
 misread by a decade that every sum still balanced, a total returned with the weight left

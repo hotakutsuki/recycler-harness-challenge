@@ -5,7 +5,8 @@
   "folio": "015630",
   "duplicate_of": null,
   "uncertain": [
-    "El total está escrito en verde junto a «Abona» y puede ser 510,33 o 510,30. Con 1890 al 0,27 daría 510,30."
+    "Corregido tras ampliar la foto: el 510,30 en verde está rotulado «Abona», así que es un pago, no el total. Mi primera lectura lo puso como total y contradecía lo que decidimos para la 015639.",
+    "La casilla TOTAL $ tiene una cifra tachada y no se lee: el total queda ilegible."
   ],
   "reviewed_by_human": false,
   "extraction": {
@@ -41,16 +42,25 @@
     },
     "settlement": {
       "total": {
-        "raw": "510,33",
-        "value": 510.33,
-        "legible": true,
-        "replaces": "(ilegible)"
+        "raw": "",
+        "value": null,
+        "legible": false,
+        "replaces": null
       },
-      "payments": [],
+      "payments": [
+        {
+          "kind": "abono",
+          "amount": {
+            "raw": "510,30",
+            "value": 510.3,
+            "legible": true,
+            "replaces": null
+          },
+          "raw": "Abona 510,30"
+        }
+      ],
       "owed": null
     },
-    "notes": [
-      "Abona"
-    ]
+    "notes": []
   }
 }

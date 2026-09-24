@@ -243,7 +243,9 @@ We considered writing a synthetic set instead and ran one early on. Real paper i
 
 It also corrected the measurement itself twice: material spelling was being counted as error when both spellings resolved to the same material, and on two receipts the ground truth was wrong and the model was right, which enlarging the photo settled.
 
-**Where it stands:** 94.5 % of fields read correctly, one silent error in 27 documents, and 71.4 % of crossed-out values read as the correction rather than the struck figure — the weakest number, and the next thing to work on.
+**Where it stands:** 94.2 % of fields read correctly, one silent error in 27 documents, and 85 % of crossed-out values read as the correction rather than the struck figure.
+
+Chasing that last number is worth recording, because the name of the metric described the failure wrongly. The model was not preferring struck figures; it was declining the whole box as illegible, and twice it read the figure correctly and filed it as a payment. Telling it what these receipts actually look like moved it from 71 % to 85 %. And the opposite failure appeared the moment the first fix landed: encouraged to prefer the clean figure, it started reconstructing what the ink beneath a scribble used to say. Both edges needed saying — a struck figure is never the answer, and reading through a scribble is not reading.
 
 ## 6. Tooling & tradeoffs
 
