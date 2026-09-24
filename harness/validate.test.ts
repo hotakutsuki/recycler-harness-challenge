@@ -247,12 +247,67 @@ describe("documents that are wrong must be caught", () => {
     expect(check(doc)).toContain("PRECIO:1");
   });
 
+  it("a quantity misread by a factor of ten, on a line with no unit price", () => {
+    // Card 2783: "0,5 cobre — 2,50", read as a quantity of 5. Nothing to
+    // multiply, so no arithmetic check applies; the price it implies does the
+    // work — 0,50 a kilo for copper is nowhere near the band.
+    const doc = tarjeta({
+      lines: [
+        { index: 1, quantity: n("05", 5), material_raw: "cobre", unit_price: null, amount: n("2,50", 2.5), note: null },
+      ],
+      settlement: { total: n("2,50", 2.5), payments: [], owed: null },
+    });
+    expect(check(doc)).toContain("PRECIO:1");
+  });
+
+  it("stays quiet when that same line is read correctly", () => {
+    const doc = tarjeta({
+      lines: [
+        { index: 1, quantity: n("0,5", 0.5), material_raw: "cobre", unit_price: null, amount: n("2,50", 2.5), note: null },
+      ],
+      settlement: { total: n("2,50", 2.5), payments: [], owed: null },
+    });
+    expect(check(doc)).toEqual([]);
+  });
+
   it("a truck load settled at an implausible price per unit", () => {
     const doc = comprobante({
       weighing: { gross: n("5000", 5000), tare: n("4000", 4000), net: n("1000", 1000), unit: null, deductions: [], final_net: null },
       settlement: { total: n("2500", 2500), payments: [], owed: null }, // 2,50 per unit
     });
     expect(check(doc)).toContain("PRECIO");
+  });
+
+  it("a day that disagrees with the receipts either side of it", () => {
+    // 015646 read as the 10th when 015644 and 015645 are both the 18th. Every
+    // sum still adds up; only the neighbours give it away.
+    const priors = [
+      { kind: "comprobante", folio: "015644", dateIso: "2026-09-18", total: 100 },
+      { kind: "comprobante", folio: "015645", dateIso: "2026-09-18", total: 100 },
+    ];
+    const doc = comprobante({
+      receipt_number: "015646",
+      date_raw: "10/09/2026",
+      weighing: { gross: n("2770", 2770), tare: n("1990", 1990), net: n("780", 780), unit: null, deductions: [], final_net: null },
+      settlement: { total: n("202,80", 202.8), payments: [], owed: null },
+    });
+    expect(check(doc, priors)).toContain("V11");
+  });
+
+  it("stays quiet when the neighbours do not agree among themselves", () => {
+    // Receipt 015642 really is dated a month before its neighbours. A check
+    // that cannot accept an outlier is one people learn to click through.
+    const priors = [
+      { kind: "comprobante", folio: "015641", dateIso: "2026-09-18", total: 100 },
+      { kind: "comprobante", folio: "015643", dateIso: "2026-08-19", total: 100 },
+    ];
+    const doc = comprobante({
+      receipt_number: "015642",
+      date_raw: "19/08/2026",
+      weighing: { gross: n("2100", 2100), tare: n("1660", 1660), net: n("440", 440), unit: null, deductions: [], final_net: null },
+      settlement: { total: n("88", 88), payments: [], owed: null },
+    });
+    expect(check(doc, priors)).not.toContain("V11");
   });
 
   it("the same folio photographed twice", () => {
@@ -281,6 +336,19 @@ describe("material resolution", () => {
   it("suggests rather than decides when the match is not exact", () => {
     expect(resolveMaterial("chatara", materials).match).toBe("fuzzy");
     expect(resolveMaterial("Pet", materials).match).toBe("alias");
+  });
+
+  it("gives up rather than guess when the writing is too mangled", () => {
+    // "cahtrr" for chatarra: the letters are all there and in the wrong order.
+    // The system does not decide; it asks, and once told it remembers — which
+    // is what the alias list in the settings screen is for.
+    const result = resolveMaterial("cahtrr", materials);
+    expect(result.match).not.toBe("alias");
+
+    const taught = [...materials];
+    const chatarra = taught.find((m) => m.id === "chatarra")!;
+    taught[taught.indexOf(chatarra)] = { ...chatarra, aliases: [...chatarra.aliases, "cahtrr"] };
+    expect(resolveMaterial("cahtrr", taught).match).toBe("alias");
   });
 
   it("refuses to guess at something it does not know", () => {

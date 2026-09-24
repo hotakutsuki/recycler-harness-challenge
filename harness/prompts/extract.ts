@@ -60,6 +60,8 @@ RULES
 
    So "1u" is 14, "l0" is 10, "2s" is 25. If you find yourself about to put a letter inside a number, you have misread a digit — look again.
 
+   The decimal comma carries weight: "0,5" is half a unit and "05" is five, a tenfold difference in what gets paid. Never drop a comma, and never drop a leading zero.
+
    The digits of one number can be written with a gap between them: "2 77,5" is a single quantity, 277,5, not a 2 followed by something else. On a tarjeta line, the quantity is the number at the start of the line, before the material name. The little word that joins them is not part of the material: "98 de Pet" is a quantity of 98 and a material of "Pet", not "de Pet".
 
    The year deserves particular care. This yard photographs its paperwork within days or weeks, so a date that reads as years old is almost always a misread digit — the first real run returned 2016 and 2024 for documents written in 2026. Look again before you answer. This is not permission to invent a date: if the ink genuinely reads 2016, return 2016 and say so in the notes.

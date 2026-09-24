@@ -5,13 +5,14 @@
   "folio": "015643",
   "duplicate_of": null,
   "uncertain": [
+    "Corregido: la fecha es 18/09, no 19/09. Mi primera lectura estaba mal y el modelo la leyó bien; se confirmó ampliando la foto.",
     "En la columna Kg hay un «50» suelto."
   ],
   "reviewed_by_human": false,
   "extraction": {
     "kind": "comprobante",
     "receipt_number": "015643",
-    "date_raw": "19/09/2026",
+    "date_raw": "18/09/2026",
     "counterparty": null,
     "material_raw": "Chatarra",
     "plate": null,

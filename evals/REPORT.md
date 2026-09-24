@@ -1,20 +1,20 @@
 # Evaluation report
 
-Generated 2026-09-23 14:23 · 5 documents
+Generated 2026-09-24 00:07 · 3 documents
 
 ## Headline
 
 | | |
 |---|---|
-| **Silent error rate** — a wrong value and no flag at all | **0.0 %** (0 of 5) |
-| Wrong, but only a warning — visible, still committable | 20.0 % (1 of 5) |
-| Field accuracy | 91.7 % (33 of 36) |
+| **Silent error rate** — a wrong value and no flag at all | **0.0 %** (0 of 3) |
+| Wrong, but only a warning — visible, still committable | 66.7 % (2 of 3) |
+| Field accuracy | 84.0 % (21 of 25) |
 | Document type read correctly | 100.0 % |
-| Crossed-out values read as the correction | 100.0 % (1 of 1) |
+| Crossed-out values read as the correction | — (0 of 0) |
 | Documents where a check was missed | 0 |
-| Documents flagged for nothing | 2 |
-| Average time per document | 17.9 s |
-| Tokens | 29330 in · 6721 out |
+| Documents flagged for nothing | 1 |
+| Average time per document | 21.1 s |
+| Tokens | 17784 in · 4567 out |
 
 A silent error is the one that costs money: the value is wrong and nothing
 stops it reaching the ledger. A wrong value that raises a check is a minor
@@ -24,11 +24,9 @@ inconvenience — somebody looks at the photo and fixes it.
 
 | Document | Type | Fields right | Wrong | Flags expected | Flags raised | Silent |
 |---|---|---|---|---|---|---|
-| doc-01 (015636) | ok | 7/7 | — | — | — | no |
-| doc-02 (015635) | ok | 3/5 | material (wrong), truck.net (missed) | — | V10 | no |
-| doc-03 (015638) | ok | 9/9 | — | — | — | no |
-| doc-04 (2780) | ok | 5/5 | — | V4 | V4 | no |
-| doc-05 (015639) | ok | 9/10 | payment.0 (invented) | — | V6 | no |
+| doc-13 (015633) | ok | 7/7 | — | — | — | no |
+| doc-17 (2782) | ok | 7/9 | date: «2026-09-18» → «2020-09-18»; line.0.quantity: «0,5» → «6,5» | — | PRECIO, V7 | no |
+| doc-18 (2783) | ok | 7/9 | line.0.quantity: «0,5» → «05»; line.1.quantity: «0,5» → «05» | PRECIO | PRECIO | no |
 
 ## How to read this
 

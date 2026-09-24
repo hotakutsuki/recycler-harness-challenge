@@ -5,7 +5,7 @@
   "folio": "015635",
   "duplicate_of": null,
   "uncertain": [
-    "El material dice «Chatarro» o «Chatarra», la letra no lo aclara.",
+    "Resuelto: dice «chatarra». La letra es ambigua, pero «chatarro» no es un material.",
     "El detalle es una sola línea, «160 kg», sin pesaje de camión."
   ],
   "reviewed_by_human": false,
@@ -14,7 +14,7 @@
     "receipt_number": "015635",
     "date_raw": "18/09/2026",
     "counterparty": null,
-    "material_raw": "Chatarro",
+    "material_raw": "Chatarra",
     "plate": null,
     "observations": null,
     "weighing": {

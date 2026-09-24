@@ -24,6 +24,7 @@ export type FlagCode =
   | "V8" // possible duplicate
   | "V9" // illegible field
   | "V10" // a total with nothing weighed to back it
+  | "V11" // the date disagrees with the neighbouring folios
   | "PRECIO"; // price outside the band this material trades in
 
 export type Severity = "blocking" | "warning";
@@ -82,6 +83,23 @@ export function validate(
           price: line.unitPrice,
           expected: round2(expected),
           written: round2(line.amount),
+        }, line.index);
+      }
+    }
+
+    // PRECIO on a line that states an amount but no unit price. Those lines
+    // have no arithmetic to check — and that is exactly where a misread
+    // quantity hides: "0,5" read as "05" turns half a kilo of copper into
+    // five, and every check passes because there is nothing to multiply. The
+    // price the line implies is the only handle, and it is a strong one.
+    if (line.unitPrice == null && line.priceRange && line.amount != null && line.quantity) {
+      const implied = line.amount / line.quantity;
+      if (implied < line.priceRange.min || implied > line.priceRange.max) {
+        add("PRECIO", "warning", {
+          material: line.materialName ?? line.materialRaw,
+          written: round2(implied),
+          min: line.priceRange.min,
+          max: line.priceRange.max,
         }, line.index);
       }
     }
@@ -250,6 +268,35 @@ export function validate(
   );
   if (duplicate) {
     add("V8", "warning", { folio: doc.folio ?? "", date: duplicate.dateIso ?? "" });
+  }
+
+  // V11 — the folio is pre-printed and used in order, so the receipts either
+  // side of this one were written around the same time. When they agree with
+  // each other and this one does not, the day is worth a second look.
+  //
+  // This came from a misread day (10 for 18) that every other check passed and
+  // that files a purchase on the wrong day's cash report. It is a warning, not
+  // a block: the real paper does contain a genuine outlier — receipt 015642 is
+  // dated a month before its neighbours — and a check that refuses to accept
+  // reality is a check people learn to bypass.
+  const folioNumber = Number(doc.folio);
+  if (doc.dateIso && Number.isFinite(folioNumber) && doc.folio) {
+    const neighbours = priors
+      .filter((p) => p.kind === doc.kind && p.dateIso && Number.isFinite(Number(p.folio)))
+      .map((p) => ({ distance: Math.abs(Number(p.folio) - folioNumber), dateIso: p.dateIso! }))
+      .filter((p) => p.distance > 0 && p.distance <= 3)
+      .sort((a, b) => a.distance - b.distance)
+      .slice(0, 3);
+
+    const agree = neighbours.length >= 2 && new Set(neighbours.map((n) => n.dateIso)).size === 1;
+    if (agree) {
+      const theirs = new Date(neighbours[0]!.dateIso + "T00:00:00Z").getTime();
+      const ours = new Date(doc.dateIso + "T00:00:00Z").getTime();
+      const days = Math.abs(ours - theirs) / (24 * 60 * 60 * 1000);
+      if (days > config.folioDateSlackDays) {
+        add("V11", "warning", { date: doc.dateIso, neighbours: neighbours[0]!.dateIso });
+      }
+    }
   }
 
   return flags;

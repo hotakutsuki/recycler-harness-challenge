@@ -6,7 +6,7 @@
   "duplicate_of": null,
   "uncertain": [
     "El motivo del descuento parece «Refrita» o «Refrifa»; quizá refrigeradora.",
-    "El total de 69,00 está tachado, y al lado dice «Abona 82,00». Ni Josué ni yo sabemos qué significa: parece un pago por encima de la compra, quizá adelanto a cuenta de una futura."
+    "El «Abona 82,00» se registra como abono, aunque supere la compra de 69,00: probablemente salda una deuda anterior o deja un adelanto. Que el sistema lo marque como aviso está bien; no es un error."
   ],
   "reviewed_by_human": false,
   "extraction": {
@@ -62,11 +62,20 @@
         "legible": true,
         "replaces": null
       },
-      "payments": [],
+      "payments": [
+        {
+          "kind": "abono",
+          "amount": {
+            "raw": "82,00",
+            "value": 82,
+            "legible": true,
+            "replaces": null
+          },
+          "raw": "Abona 82,00"
+        }
+      ],
       "owed": null
     },
-    "notes": [
-      "Abona 82,00"
-    ]
+    "notes": []
   }
 }

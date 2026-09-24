@@ -2,10 +2,11 @@ import "dotenv/config";
 import fs from "node:fs";
 import path from "node:path";
 import { DEFAULT_CONFIG } from "../harness/catalog";
+import { resolveMaterial } from "../harness/normalize";
 import { extractDocument } from "../lib/extractor";
 import { normalize, parseDate } from "../harness/normalize";
 import { Document, type NumberField } from "../harness/schema";
-import { validate, isBlocking, type Flag } from "../harness/validate";
+import { validate, isBlocking, type Flag, type PriorDocument } from "../harness/validate";
 import { usingStub } from "../lib/extractor";
 
 /**
@@ -22,7 +23,9 @@ import { usingStub } from "../lib/extractor";
 
 const DATASET = path.join(process.cwd(), "evals", "dataset");
 const REPORT = path.join(process.cwd(), "evals", "REPORT.md");
-const limit = Number(process.argv[2] ?? "0");
+const args = process.argv.slice(2);
+const only = args.find((a) => a.startsWith("--only="))?.slice(7)?.split(",") ?? null;
+const limit = Number(args.find((a) => /^\d+$/.test(a)) ?? "0");
 
 interface GroundTruth {
   id: string;
@@ -104,7 +107,19 @@ type Verdict = "match" | "wrong" | "missed" | "invented";
  * and the separator is a convention. Text is compared case- and accent-folded,
  * because "Chatarra" and "chatarra" are the same material to everyone involved.
  */
-function compare(truth: Field, got: Field | undefined): Verdict {
+function compare(truth: Field, got: Field | undefined, path = ""): Verdict {
+  // Materials are compared by what they resolve to, not by their spelling. The
+  // yard writes "grues" and "gioes" for the same thing; if both land on
+  // Chatarra gruesa the system behaves identically, and counting the spelling
+  // as an error would bury the failures that actually change a record.
+  if (path.endsWith("material")) {
+    if (got == null || got.raw == null) return "missed";
+    const a = resolveMaterial(truth.raw ?? "", DEFAULT_CONFIG.materials);
+    const b = resolveMaterial(got.raw, DEFAULT_CONFIG.materials);
+    if (a.material && b.material) return a.material.id === b.material.id ? "match" : "wrong";
+    return a.material === b.material ? "match" : "wrong";
+  }
+
   const fold = (s: string) =>
     s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
 
@@ -127,7 +142,7 @@ interface DocResult {
   folio: string;
   kindCorrect: boolean;
   counts: Record<Verdict, number>;
-  wrongFields: string[];
+  wrongFields: { path: string; verdict: Verdict; truth: string; got: string }[];
   corrections: { total: number; right: number };
   flagsTruth: string[];
   flagsGot: string[];
@@ -140,10 +155,11 @@ interface DocResult {
   error?: string;
 }
 
-async function evaluate(record: GroundTruth): Promise<DocResult> {
+async function evaluate(record: GroundTruth, priors: PriorDocument[]): Promise<DocResult> {
   const truthDoc = Document.parse(record.extraction);
+  const truthNormalized = normalize(truthDoc, DEFAULT_CONFIG);
   const truthFields = flatten(truthDoc);
-  const truthFlags = validate(normalize(truthDoc, DEFAULT_CONFIG), DEFAULT_CONFIG).map((f) => f.code);
+  const truthFlags = validate(truthNormalized, DEFAULT_CONFIG, priors).map((f) => f.code);
 
   const base: DocResult = {
     id: record.id,
@@ -171,21 +187,29 @@ async function evaluate(record: GroundTruth): Promise<DocResult> {
   const seconds = (Date.now() - started) / 1000;
 
   const gotFields = flatten(got.document);
-  const gotFlags = validate(normalize(got.document, DEFAULT_CONFIG), DEFAULT_CONFIG);
+  const gotFlags = validate(normalize(got.document, DEFAULT_CONFIG), DEFAULT_CONFIG, priors);
 
   const counts = { ...base.counts };
-  const wrongFields: string[] = [];
+  const wrongFields: DocResult["wrongFields"] = [];
   for (const [path, truth] of truthFields) {
-    const verdict = compare(truth, gotFields.get(path));
+    const got = gotFields.get(path);
+    const verdict = compare(truth, got, path);
     counts[verdict]++;
-    if (verdict !== "match") wrongFields.push(`${path} (${verdict})`);
+    if (verdict !== "match") {
+      wrongFields.push({
+        path,
+        verdict,
+        truth: truth.raw ?? "—",
+        got: got == null ? "—" : !got.legible ? "(illegible)" : (got.raw ?? "—"),
+      });
+    }
   }
 
   // Fields the model reported that the document does not have at all.
-  for (const path of gotFields.keys()) {
+  for (const [path, got] of gotFields) {
     if (!truthFields.has(path)) {
       counts.invented++;
-      wrongFields.push(`${path} (invented)`);
+      wrongFields.push({ path, verdict: "invented", truth: "—", got: got.raw ?? "—" });
     }
   }
 
@@ -284,7 +308,7 @@ function markdown(results: DocResult[]): string {
     const total = r.counts.match + r.counts.wrong + r.counts.missed + r.counts.invented;
     lines.push(
       `| ${r.id} (${r.folio}) | ${r.kindCorrect ? "ok" : "**wrong**"} | ${r.counts.match}/${total} |` +
-        ` ${r.wrongFields.slice(0, 3).join(", ") || "—"} | ${r.flagsTruth.join(", ") || "—"} |` +
+        ` ${r.wrongFields.slice(0, 3).map((w) => `${w.path}: «${w.truth}» → «${w.got}»`).join("; ") || "—"} | ${r.flagsTruth.join(", ") || "—"} |` +
         ` ${r.flagsGot.join(", ") || "—"} | ${r.silent ? "**yes**" : "no"} |`,
     );
   }
@@ -321,12 +345,22 @@ async function main() {
     process.exit(1);
   }
 
-  const chosen = limit > 0 ? records.slice(0, limit) : records;
+  const chosen = only
+    ? records.filter((r) => only.includes(r.id))
+    : limit > 0
+      ? records.slice(0, limit)
+      : records;
   console.log(`evaluating ${chosen.length} documents${usingStub() ? " (stub mode — measures the runner, not the model)" : ""}\n`);
 
+  // The duplicate and folio-sequence checks only mean anything against what
+  // came before, so the run feeds each document the ones already seen — as the
+  // app does.
+  const priors: PriorDocument[] = [];
   const results: DocResult[] = [];
   for (const record of chosen) {
-    const result = await evaluate(record);
+    const result = await evaluate(record, [...priors]);
+    const truth = normalize(Document.parse(record.extraction), DEFAULT_CONFIG);
+    priors.push({ kind: truth.kind, folio: truth.folio, dateIso: truth.dateIso, total: truth.settlement.total });
     results.push(result);
 
     const total =

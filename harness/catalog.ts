@@ -63,6 +63,8 @@ export interface Config {
    * Guards against a misread year, which every arithmetic check would pass.
    */
   staleDateMonths: number;
+  /** How far a document's date may sit from its neighbouring folios, in days. */
+  folioDateSlackDays: number;
   /** Band for the implied price on a comprobante, where no unit price is written. */
   bulkPriceRange: { min: number; max: number };
   currency: string;
@@ -95,6 +97,7 @@ export const DEFAULT_CONFIG: Config = {
   amountEpsilon: 0.051,
   settlementEpsilon: 1.0,
   staleDateMonths: 18,
+  folioDateSlackDays: 3,
   weightEpsilon: 0.5,
   // Every truck load in the sample settled between 0,20 and 0,26 per unit.
   bulkPriceRange: { min: 0.12, max: 0.45 },

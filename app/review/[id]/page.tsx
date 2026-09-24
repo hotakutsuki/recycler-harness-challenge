@@ -5,7 +5,8 @@ import { url } from "@/lib/storage";
 import { getTranslator } from "@/lib/i18n.server";
 import type { Translate } from "@/lib/i18n";
 import { usingStub } from "@/lib/extractor";
-import { check, persist } from "@/lib/pipeline";
+import { check, loadConfig, persist } from "@/lib/pipeline";
+import { normalize } from "@/harness/normalize";
 import { describe as describeFlag } from "@/harness/messages";
 import { Document, type Comprobante, type NumberField, type Tarjeta } from "@/harness/schema";
 import type { Disagreement } from "@/harness/reread";
@@ -180,6 +181,19 @@ export default async function ReviewPage({
       corrections.push({ field: path, from: before, to: value });
     }
 
+    // When a person tells the system which material a scrawl meant, the system
+    // remembers the spelling. That is how "cahtrr" resolves by itself next
+    // week: not by guessing harder, but by having been told once. The catalog
+    // learns from corrections, and every alias it learns is visible and
+    // removable in the settings screen.
+    for (const [key, value] of formData.entries()) {
+      if (!key.startsWith("learn.") || typeof value !== "string" || value === "") continue;
+      const written = String(formData.get(`f.${key.slice(6)}`) ?? "").trim();
+      if (!written) continue;
+      const exists = await db.alias.findFirst({ where: { text: written } });
+      if (!exists) await db.alias.create({ data: { text: written, materialId: value } });
+    }
+
     const { normalized, flags: newFlags } = await check(edited, id);
     const action = formData.get("action");
     const reason = String(formData.get("reason") ?? "").trim();
@@ -221,6 +235,20 @@ export default async function ReviewPage({
     });
 
     redirect(`/review/${id}?saved=1`);
+  }
+
+  const config = await loadConfig();
+  const materials = await db.material.findMany({ where: { active: true }, orderBy: { position: "asc" } });
+
+  // Which lines the catalog could not resolve on its own: those are the ones
+  // worth asking a person about, and the only ones that get a picker.
+  const unresolved = new Map<string, string>();
+  if (current) {
+    for (const line of normalize(current, config).lines) {
+      if (line.match !== "alias") {
+        unresolved.set(`lines.${line.index - 1}.material_raw`, line.materialId ?? "");
+      }
+    }
   }
 
   const editable = current ? fields(current) : [];
@@ -295,6 +323,19 @@ export default async function ReviewPage({
                         <th>{labelFor(field.path, t)}</th>
                         <td>
                           <input name={`f.${field.path}`} defaultValue={field.value} />
+                          {unresolved.has(field.path) && (
+                            <span className="learn">
+                              <select name={`learn.${field.path}`} defaultValue="">
+                                <option value="">{t("review.pickMaterial")}</option>
+                                {materials.map((m) => (
+                                  <option key={m.id} value={m.id}>
+                                    {m.name}
+                                  </option>
+                                ))}
+                              </select>
+                              <small>{t("review.learnHint", { written: field.value })}</small>
+                            </span>
+                          )}
                         </td>
                       </tr>
                     ))}
