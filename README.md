@@ -101,7 +101,7 @@ configuration screen, and photo retention.
 
 | Stubbed or simplified | Why, and what it would be |
 |---|---|
-| **`EXTRACTOR=stub`** replays the ground truth instead of calling the model | The API key available during development had no credit. The stub only answers for photos byte-identical to the dataset images and refuses anything else; every screen it feeds carries a badge. The real call is `harness/extract.ts`, used whenever the stub is off. |
+| **`EXTRACTOR=stub`** replays the ground truth instead of calling the model | So the app can be opened and used without a key, and so the UI can be worked on without spending on a call per reload. It only answers for photos byte-identical to the dataset images and refuses anything else, and every screen it feeds carries a badge. The real path is `harness/extract.ts`, used whenever the stub is off — it is what produced the numbers above. |
 | **The worker runs in-process**, not on a queue | Enough for one yard and one person at a counter. Rows left mid-extraction by a restart are re-queued at boot. A production version would use a real queue. |
 | **Photos are stored on local disk** | Behind a two-method interface (`save`, `url`), so object storage is a one-file change. |
 | **SQLite** | One line of Prisma config away from Postgres. |
@@ -109,6 +109,7 @@ configuration screen, and photo retention.
 | **No authentication, single yard** | Out of scope for a vertical slice. The data model does not assume one tenant. |
 | **`counterparty` is always empty in the shipped dataset** | Names are masked in the published photos, so there is nothing to read. The field and the supplier filter work on unmasked paper. |
 | **Mock product screens were dropped** | An earlier plan had a dashboard, suppliers and sales as mock context. They were cut: they would add surface without adding evidence. |
+| **The second reading is not measured separately** | It runs in the app whenever something blocking is open. The eval measures the first pass only, so the reported accuracy is the pessimistic one. |
 | **No deployment** | There is no hosted demo and no demo video. This repository is the whole delivery. |
 
 ## Evaluation
@@ -159,8 +160,9 @@ the transcription says so.
 
 ## Known limitations
 
-- **Extraction quality is unmeasured.** Everything downstream of the reading is tested;
-  the reading itself is not.
+- **The numbers come from one week of one yard's paper.** 27 documents, one
+  handwriting, one set of habits. A second yard is the obvious next test, and the
+  honest expectation is that accuracy drops there before it recovers.
 - **The ground truth was transcribed by two readers who both saw the arithmetic.** The
   checks are independent evidence, but a shared misreading on a field no check covers —
   a date, a folio — would go unnoticed.
