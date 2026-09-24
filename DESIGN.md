@@ -237,7 +237,13 @@ We considered writing a synthetic set instead and ran one early on. Real paper i
 - Flag recall on documents that genuinely have a problem, and false-flag rate on the ones that do not.
 - Cost and latency per document.
 
-**Loop.** An eval script runs the full pipeline on the set and prints a report, so every prompt, model, or validation change is measured, not guessed.
+**Loop.** `npm run eval` runs the full pipeline over the set and writes `evals/REPORT.md`, so every prompt, model or check change is measured rather than argued about.
+
+**What the loop actually produced.** Running it was not a formality; it changed the system four times. The model read a year as 2016 for 2026 — arithmetic cannot see that, so a stale-date check went in. It returned a total and left the weight out — so a total with nothing measured behind it is now blocking. It read "0,5" as "05" on a line with no unit price, where nothing multiplies — so those lines are now checked against the price they imply. And comparing a receipt's date against the folios either side catches a day misread, since the numbering is pre-printed and used in order.
+
+It also corrected the measurement itself twice: material spelling was being counted as error when both spellings resolved to the same material, and on two receipts the ground truth was wrong and the model was right, which enlarging the photo settled.
+
+**Where it stands:** 94.5 % of fields read correctly, one silent error in 27 documents, and 71.4 % of crossed-out values read as the correction rather than the struck figure — the weakest number, and the next thing to work on.
 
 ## 6. Tooling & tradeoffs
 

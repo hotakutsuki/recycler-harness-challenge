@@ -125,16 +125,37 @@ document-type accuracy, field accuracy, whether a crossed-out value was read as 
 correction rather than the struck figure, whether a number was invented where the ink
 is unreadable, and the false-flag rate on documents that are perfectly fine.
 
-**The numbers are not in yet.** The key available during development had no credit, so
-the model has never read one of these documents. `evals/REPORT.md` currently holds a
-stub run, labelled as such inside the file: it exercises the evaluation harness and says
-nothing about the model. Reporting a stubbed 100 % as a result would be worse than
-reporting nothing.
+### Results
 
-What *is* measured: the checks themselves, run over the 27 hand-transcribed documents
-with no model involved. 23 of 27 come out silent. The four that do not are all real —
-two receipts photographed twice (caught by folio), a material the yard trades in that
-the catalog did not have, and two one-line cards with no separate total.
+Claude Opus 5 reading all 27 documents, measured against the hand-transcribed ground
+truth. Full detail, field by field, in [`evals/REPORT.md`](./evals/REPORT.md).
+
+| | |
+|---|---|
+| **Silent error rate** — a wrong value with no flag at all | **3.7 %** (1 of 27) |
+| Wrong, but only a warning — visible, still committable | 3.7 % (1 of 27) |
+| Field accuracy | 94.5 % (258 of 273) |
+| Document type read correctly | 100 % |
+| Crossed-out values read as the correction | 71.4 % (10 of 14) |
+| Time per document | 18.5 s · ~5,900 input tokens |
+
+The model misreads things. That is expected and it is the reason the checks exist: of
+the 15 fields it got wrong, 14 raised something a person has to look at. The one that
+did not is a day read as the 10th where the paper says the 18th — an ambiguous digit
+that no arithmetic can catch. The check written for exactly that case (comparing a
+receipt's date against the folios either side) needed two neighbouring receipts and had
+only one at that point in the run.
+
+**The weakest number is the crossed-out one.** In four of fourteen corrected values the
+model returned the abandoned figure rather than the correction. On this paper a struck
+total is routine, so that is the next thing to work on.
+
+Three of the checks in this repository exist because of what this run exposed: a year
+misread by a decade that every sum still balanced, a total returned with the weight left
+out entirely, and a quantity misread by a factor of ten on a line with no unit price to
+multiply. Two of the "silent errors" in the first run turned out to be errors in the
+ground truth, not the model — enlarging the photo settled it in the model's favour, and
+the transcription says so.
 
 ## Known limitations
 
