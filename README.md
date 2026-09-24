@@ -22,26 +22,45 @@ Node 20+ required.
 npm install
 cp .env.example .env
 npm run db:migrate && npm run db:seed
-npm run demo             # loads the 27 real documents through the whole pipeline
+```
+
+Then pick a mode. **They are different: one calls the model, the other does not.**
+
+### With the model — the real thing
+
+```bash
+# put a funded key in .env:  ANTHROPIC_API_KEY=sk-ant-...
+npm run dev              # http://localhost:3000
+npm run dev:lan          # same, reachable from a phone on the same network
+```
+
+Upload any photo of a weighing document and Claude reads it: about 18 seconds and
+roughly 6,000 input tokens per document. This is what produced the numbers below.
+
+### Without a key — demo mode
+
+```bash
+npm run demo             # loads the 27 sample documents through the whole pipeline
 npm run dev:demo         # http://localhost:3000
 ```
 
-That runs **without an API key**: `EXTRACTOR=stub` replays the reading from the ground
-truth instead of calling the model. To read documents with the model, put a funded key
-in `.env` and use `npm run dev` instead.
+`EXTRACTOR=stub` replays each sample document's reference reading instead of calling
+the model, so the screens can be used with no key and no spend. It only answers for
+photos byte-identical to the ones in `evals/dataset/fotos` and refuses anything else —
+**uploading your own photo in this mode will fail, by design.** Every screen it feeds
+says so on the page.
 
-`npm run demo` is not a database fixture — it takes the same code path an upload does,
+`npm run demo` is not a database fixture: it takes the same code path an upload does,
 so the inbox and the report show what the checks actually produced.
 
-### In a container
+### Starting over
 
 ```bash
-docker compose up --build        # http://localhost:3000, stubbed by default
-ANTHROPIC_API_KEY=sk-... EXTRACTOR= docker compose up --build
+npm run reset            # clears documents and photos, keeps materials and settings
+npm run db:reset         # wipes everything, including the catalog
 ```
 
-The container migrates the database and seeds the catalog on first boot. Photos and the
-database live in `./data` on the host, so they survive it.
+Run `npm run reset` after `npm run demo` if you want an empty inbox to upload into.
 
 ### The screens
 
@@ -57,7 +76,9 @@ database live in `./data` on the host, so they survive it.
 
 | | |
 |---|---|
-| `npm run dev` · `dev:demo` · `dev:lan` | the app; `dev:lan` binds 0.0.0.0 for a phone on the same network |
+| `npm run dev` · `dev:lan` | the app, reading documents with the model |
+| `npm run dev:demo` | the app, replaying the sample readings — no key, no spend |
+| `npm run demo` · `npm run reset` | load the sample documents · clear them again |
 | `npm test` | unit tests over the pure parts — no API calls, no key needed |
 | `npm run typecheck` | |
 | `npm run eval` | measures the harness against the 27 documents; writes `evals/REPORT.md` |

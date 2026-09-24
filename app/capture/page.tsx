@@ -1,6 +1,7 @@
 import { AppHeader } from "@/components/AppHeader";
 import { Capture } from "@/components/Capture";
 import { getTranslator } from "@/lib/i18n.server";
+import { usingStub } from "@/lib/extractor";
 
 /**
  * The capture screen is a server component that hands the client component its
@@ -14,6 +15,13 @@ export default async function CapturePage() {
   return (
     <>
       <AppHeader lang={lang} t={t} />
+      {/* Without this, a stubbed reading looks like a real one — which is
+          exactly how someone concludes the model works without a key. */}
+      {usingStub() && (
+        <main style={{ paddingBottom: 0 }}>
+          <p className="stub">{t("capture.stub")}</p>
+        </main>
+      )}
       <Capture
         locale={lang === "es" ? "es-EC" : "en-US"}
         labels={{

@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "dev:lan": "EXTRACTOR=stub next dev -H 0.0.0.0",
+    "dev:lan": "next dev -H 0.0.0.0",
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
@@ -17,7 +17,8 @@
     "dev:demo": "EXTRACTOR=stub next dev",
     "demo": "EXTRACTOR=stub tsx evals/demo.ts",
     "eval:stub": "EXTRACTOR=stub tsx evals/run.ts",
-    "retention": "tsx scripts/retention.ts"
+    "retention": "tsx scripts/retention.ts",
+    "reset": "tsx scripts/reset.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.127.0",
